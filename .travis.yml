@@ -59,8 +59,8 @@ before_install:
     brew install mono;
     brew install pyenv;
     pyenv install $PYTHON;
-    #tox should handle pyenv
-    #pyenv local $PYTHON;
+    #tox still needs this
+    pyenv local $PYTHON;
     else
     sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ trusty main universe";
     sudo apt-get install software-properties-common;
