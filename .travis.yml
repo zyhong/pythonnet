@@ -18,16 +18,19 @@ sudo: required
 matrix:
     include:
         - os: linux
-          #sudo: required
+          language: python
           python: 2.7
           env: TOXENV=py27
         - os: linux
+          language: python
           python: 3.3
           env: TOXENV=py33          
         - os: linux
+          language: python
           python: 3.4
           env: TOXENV=py34
         - os: linux
+          language: python
           python: 3.5
           env: TOXENV=py35
         - os: osx
