@@ -50,6 +50,7 @@ before_install:
     brew install pyenv;
     pyenv install $PYTHON;
     pyenv local $PYTHON;
+    easy_install pip;
     fi
   - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
     sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ trusty main universe";
