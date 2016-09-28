@@ -62,6 +62,7 @@ before_install:
     fi
 install:
   #- ./.travis/install.sh
+  - pip install virtualenv
   - pip install tox
   - pip install tox-travis
   - pip install six
