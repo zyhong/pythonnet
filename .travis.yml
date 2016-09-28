@@ -48,6 +48,7 @@ before_install:
     brew update;
     brew install mono;
     brew install pyenv;
+    brew upgrade pyenv;
     pyenv install $PYTHON;
     pyenv local $PYTHON;
     easy_install pip;
