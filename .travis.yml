@@ -60,6 +60,7 @@ before_install:
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install mono-devel mono-complete referenceassemblies-pcl ca-certificates-mono nunit-console;
     brew install pyenv;
     pyenv install $PYTHON;
+    pyenv local $PYTHON;
     fi
 install:
   #- ./.travis/install.sh
