@@ -23,7 +23,7 @@ matrix:
           env: TOXENV=py27
         - os: linux
           python: 3.3
-          env: TOXENV=py33
+          env: TOXENV=py33          
         - os: linux
           python: 3.4
           env: TOXENV=py34
@@ -33,16 +33,19 @@ matrix:
         - os: osx
           #language: generic
           env: TOXENV=py27
+          env: PYTHON=2.7.12
         - os: osx
           #language: generic
           env: TOXENV=py33
+          env: PYTHON=3.3.6
         - os: osx
           #language: generic
           env: TOXENV=py34
+          env: PYTHON=3.4.5
         - os: osx
           #language: generic
           env: TOXENV=py35
-
+          env: PYTHON=3.5.2
 before_install: 
   - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     brew update;
@@ -55,6 +58,8 @@ before_install:
     echo "deb http://download.mono-project.com/repo/debian wheezy-libtiff-compat main" | sudo tee -a /etc/apt/sources.list.d/mono-xamarin.list;
     sudo apt-get update;
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install mono-devel mono-complete referenceassemblies-pcl ca-certificates-mono nunit-console;
+    brew install pyenv;
+    pyenv install $PYTHON;
     fi
 install:
   #- ./.travis/install.sh
