@@ -13,7 +13,7 @@ sudo: required
 #    - 3.4
 #    - 3.5
 
-language: python
+#language: python
 
 matrix:
     include:
