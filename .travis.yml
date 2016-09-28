@@ -31,19 +31,23 @@ matrix:
           python: 3.5
           env: TOXENV=py35
         - os: osx
-          #language: generic
+          language: generic
+          python: 2.7
           env: TOXENV=py27
           env: PYTHON=2.7.12
         - os: osx
-          #language: generic
+          language: generic
+          python: 3.3
           env: TOXENV=py33
           env: PYTHON=3.3.6
         - os: osx
-          #language: generic
+          language: generic
+          python: 3.4
           env: TOXENV=py34
           env: PYTHON=3.4.5
         - os: osx
-          #language: generic
+          language: generic
+          python: 3.5
           env: TOXENV=py35
           env: PYTHON=3.5.2
 before_install: 
