@@ -53,7 +53,7 @@ namespace Python.Runtime
 
             if (_containingType.IsValueType && !_containingType.IsPrimitive &&
                 !_containingType.IsEnum && _containingType != typeof(decimal) &&
-                Runtime.PyTuple_Size(args) == 0)
+                Runtime.PyPyTuple_Size(args) == 0)
             {
                 // If you are trying to construct an instance of a struct by
                 // calling its default constructor, that ConstructorInfo
@@ -87,7 +87,7 @@ namespace Python.Runtime
                 // if there is a default constructor and, if so, assume that
                 // any extra args are intended for the subclass' __init__.
 
-                IntPtr eargs = Runtime.PyTuple_New(0);
+                IntPtr eargs = Runtime.PyPyTuple_New(0);
                 binding = Bind(inst, eargs, kw);
                 Runtime.XDecref(eargs);
 

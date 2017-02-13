@@ -50,7 +50,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyList()
         {
-            obj = Runtime.PyList_New(0);
+            obj = Runtime.PyPyList_New(0);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -67,12 +67,12 @@ namespace Python.Runtime
         public PyList(PyObject[] items)
         {
             int count = items.Length;
-            obj = Runtime.PyList_New(count);
+            obj = Runtime.PyPyList_New(count);
             for (var i = 0; i < count; i++)
             {
                 IntPtr ptr = items[i].obj;
                 Runtime.XIncref(ptr);
-                int r = Runtime.PyList_SetItem(obj, i, ptr);
+                int r = Runtime.PyPyList_SetItem(obj, i, ptr);
                 if (r < 0)
                 {
                     throw new PythonException();
@@ -89,7 +89,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsListType(PyObject value)
         {
-            return Runtime.PyList_Check(value.obj);
+            return Runtime.PyPyList_Check(value.obj);
         }
 
 
@@ -103,7 +103,7 @@ namespace Python.Runtime
         /// </remarks>
         public static PyList AsList(PyObject value)
         {
-            IntPtr op = Runtime.PySequence_List(value.obj);
+            IntPtr op = Runtime.PyPySequence_List(value.obj);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -120,7 +120,7 @@ namespace Python.Runtime
         /// </remarks>
         public void Append(PyObject item)
         {
-            int r = Runtime.PyList_Append(obj, item.obj);
+            int r = Runtime.PyPyList_Append(obj, item.obj);
             if (r < 0)
             {
                 throw new PythonException();
@@ -135,7 +135,7 @@ namespace Python.Runtime
         /// </remarks>
         public void Insert(int index, PyObject item)
         {
-            int r = Runtime.PyList_Insert(obj, index, item.obj);
+            int r = Runtime.PyPyList_Insert(obj, index, item.obj);
             if (r < 0)
             {
                 throw new PythonException();
@@ -151,7 +151,7 @@ namespace Python.Runtime
         /// </remarks>
         public void Reverse()
         {
-            int r = Runtime.PyList_Reverse(obj);
+            int r = Runtime.PyPyList_Reverse(obj);
             if (r < 0)
             {
                 throw new PythonException();
@@ -167,7 +167,7 @@ namespace Python.Runtime
         /// </remarks>
         public void Sort()
         {
-            int r = Runtime.PyList_Sort(obj);
+            int r = Runtime.PyPyList_Sort(obj);
             if (r < 0)
             {
                 throw new PythonException();

@@ -56,7 +56,7 @@ namespace Python.Runtime
 
         internal bool NeedsDefaultArgs(IntPtr args)
         {
-            int pynargs = Runtime.PyTuple_Size(args);
+            int pynargs = Runtime.PyPyTuple_Size(args);
             MethodBase[] methods = SetterBinder.GetMethods();
             if (methods.Length == 0)
             {
@@ -93,16 +93,16 @@ namespace Python.Runtime
             // if we don't need default args return empty tuple
             if (!NeedsDefaultArgs(args))
             {
-                return Runtime.PyTuple_New(0);
+                return Runtime.PyPyTuple_New(0);
             }
-            int pynargs = Runtime.PyTuple_Size(args);
+            int pynargs = Runtime.PyPyTuple_Size(args);
 
             // Get the default arg tuple
             MethodBase[] methods = SetterBinder.GetMethods();
             MethodBase mi = methods[0];
             ParameterInfo[] pi = mi.GetParameters();
             int clrnargs = pi.Length - 1;
-            IntPtr defaultArgs = Runtime.PyTuple_New(clrnargs - pynargs);
+            IntPtr defaultArgs = Runtime.PyPyTuple_New(clrnargs - pynargs);
             for (var i = 0; i < clrnargs - pynargs; i++)
             {
                 if (pi[i + pynargs].DefaultValue == DBNull.Value)
@@ -110,7 +110,7 @@ namespace Python.Runtime
                     continue;
                 }
                 IntPtr arg = Converter.ToPython(pi[i + pynargs].DefaultValue, pi[i + pynargs].ParameterType);
-                Runtime.PyTuple_SetItem(defaultArgs, i, arg);
+                Runtime.PyPyTuple_SetItem(defaultArgs, i, arg);
             }
             return defaultArgs;
         }

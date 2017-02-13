@@ -36,13 +36,13 @@ namespace Python.Runtime
         public static IntPtr tp_new(IntPtr tp, IntPtr args, IntPtr kw)
         {
             var self = (InterfaceObject)GetManagedObject(tp);
-            int nargs = Runtime.PyTuple_Size(args);
+            int nargs = Runtime.PyPyTuple_Size(args);
             Type type = self.type;
             object obj;
 
             if (nargs == 1)
             {
-                IntPtr inst = Runtime.PyTuple_GetItem(args, 0);
+                IntPtr inst = Runtime.PyPyTuple_GetItem(args, 0);
                 var co = GetManagedObject(inst) as CLRObject;
 
                 if (co == null || !type.IsInstanceOfType(co.inst))

@@ -88,11 +88,11 @@ namespace Python.Runtime
                         TypeFlags.HeapType | TypeFlags.HaveGC;
             Marshal.WriteIntPtr(type, TypeOffset.tp_flags, (IntPtr)flags);
 
-            Runtime.PyType_Ready(type);
+            Runtime.PyPyType_Ready(type);
 
             IntPtr dict = Marshal.ReadIntPtr(type, TypeOffset.tp_dict);
-            IntPtr mod = Runtime.PyString_FromString("CLR");
-            Runtime.PyDict_SetItemString(dict, "__module__", mod);
+            IntPtr mod = Runtime.PyPyString_FromString("CLR");
+            Runtime.PyPyDict_SetItemString(dict, "__module__", mod);
 
             InitMethods(type, impl);
 
@@ -163,15 +163,15 @@ namespace Python.Runtime
             Marshal.WriteIntPtr(type, TypeOffset.tp_flags, (IntPtr)flags);
 
             // Leverage followup initialization from the Python runtime. Note
-            // that the type of the new type must PyType_Type at the time we
-            // call this, else PyType_Ready will skip some slot initialization.
+            // that the type of the new type must PyPyType_Type at the time we
+            // call this, else PyPyType_Ready will skip some slot initialization.
 
-            Runtime.PyType_Ready(type);
+            Runtime.PyPyType_Ready(type);
 
             IntPtr dict = Marshal.ReadIntPtr(type, TypeOffset.tp_dict);
             string mn = clrType.Namespace ?? "";
-            IntPtr mod = Runtime.PyString_FromString(mn);
-            Runtime.PyDict_SetItemString(dict, "__module__", mod);
+            IntPtr mod = Runtime.PyPyString_FromString(mn);
+            Runtime.PyPyDict_SetItemString(dict, "__module__", mod);
 
             // Hide the gchandle of the implementation in a magic type slot.
             GCHandle gc = GCHandle.Alloc(impl);
@@ -187,11 +187,11 @@ namespace Python.Runtime
             return type;
         }
 
-        internal static IntPtr CreateSubType(IntPtr py_name, IntPtr py_base_type, IntPtr py_dict)
+        internal static IntPtr CreateSubType(IntPtr PyPy_name, IntPtr PyPy_base_type, IntPtr PyPy_dict)
         {
             // Utility to create a subtype of a managed type with the ability for the
             // a python subtype able to override the managed implementation
-            string name = Runtime.GetManagedString(py_name);
+            string name = Runtime.GetManagedString(PyPy_name);
 
             // the derived class can have class attributes __assembly__ and __module__ which
             // control the name of the assembly and module the new type is created in.
@@ -203,9 +203,9 @@ namespace Python.Runtime
             {
                 var assemblyKey = new PyObject(Converter.ToPython("__assembly__", typeof(string)));
                 disposeList.Add(assemblyKey);
-                if (0 != Runtime.PyMapping_HasKey(py_dict, assemblyKey.Handle))
+                if (0 != Runtime.PyPyMapping_HasKey(PyPy_dict, assemblyKey.Handle))
                 {
-                    var pyAssembly = new PyObject(Runtime.PyDict_GetItem(py_dict, assemblyKey.Handle));
+                    var pyAssembly = new PyObject(Runtime.PyPyDict_GetItem(PyPy_dict, assemblyKey.Handle));
                     disposeList.Add(pyAssembly);
                     if (!Converter.ToManagedValue(pyAssembly.Handle, typeof(string), out assembly, false))
                     {
@@ -215,9 +215,9 @@ namespace Python.Runtime
 
                 var namespaceKey = new PyObject(Converter.ToPythonImplicit("__namespace__"));
                 disposeList.Add(namespaceKey);
-                if (0 != Runtime.PyMapping_HasKey(py_dict, namespaceKey.Handle))
+                if (0 != Runtime.PyPyMapping_HasKey(PyPy_dict, namespaceKey.Handle))
                 {
-                    var pyNamespace = new PyObject(Runtime.PyDict_GetItem(py_dict, namespaceKey.Handle));
+                    var pyNamespace = new PyObject(Runtime.PyPyDict_GetItem(PyPy_dict, namespaceKey.Handle));
                     disposeList.Add(pyNamespace);
                     if (!Converter.ToManagedValue(pyNamespace.Handle, typeof(string), out namespaceStr, false))
                     {
@@ -234,7 +234,7 @@ namespace Python.Runtime
             }
 
             // create the new managed type subclassing the base managed type
-            var baseClass = ManagedType.GetManagedObject(py_base_type) as ClassBase;
+            var baseClass = ManagedType.GetManagedObject(PyPy_base_type) as ClassBase;
             if (null == baseClass)
             {
                 return Exceptions.RaiseTypeError("invalid base class, expected CLR class type");
@@ -244,20 +244,20 @@ namespace Python.Runtime
             {
                 Type subType = ClassDerivedObject.CreateDerivedType(name,
                     baseClass.type,
-                    py_dict,
+                    PyPy_dict,
                     (string)namespaceStr,
                     (string)assembly);
 
                 // create the new ManagedType and python type
                 ClassBase subClass = ClassManager.GetClass(subType);
-                IntPtr py_type = GetTypeHandle(subClass, subType);
+                IntPtr PyPy_type = GetTypeHandle(subClass, subType);
 
                 // by default the class dict will have all the C# methods in it, but as this is a
                 // derived class we want the python overrides in there instead if they exist.
-                IntPtr cls_dict = Marshal.ReadIntPtr(py_type, TypeOffset.tp_dict);
-                Runtime.PyDict_Update(cls_dict, py_dict);
+                IntPtr cls_dict = Marshal.ReadIntPtr(PyPy_type, TypeOffset.tp_dict);
+                Runtime.PyPyDict_Update(cls_dict, PyPy_dict);
 
-                return py_type;
+                return PyPy_type;
             }
             catch (Exception e)
             {
@@ -291,27 +291,27 @@ namespace Python.Runtime
         internal static IntPtr CreateMetaType(Type impl)
         {
             // The managed metatype is functionally little different than the
-            // standard Python metatype (PyType_Type). It overrides certain of
-            // the standard type slots, and has to subclass PyType_Type for
+            // standard Python metatype (PyPyType_Type). It overrides certain of
+            // the standard type slots, and has to subclass PyPyType_Type for
             // certain functions in the C runtime to work correctly with it.
 
             IntPtr type = AllocateTypeObject("CLR Metatype");
-            IntPtr py_type = Runtime.PyTypeType;
+            IntPtr PyPy_type = Runtime.PyTypeType;
 
-            Marshal.WriteIntPtr(type, TypeOffset.tp_base, py_type);
-            Runtime.XIncref(py_type);
+            Marshal.WriteIntPtr(type, TypeOffset.tp_base, PyPy_type);
+            Runtime.XIncref(PyPy_type);
 
             // Copy gc and other type slots from the base Python metatype.
 
-            CopySlot(py_type, type, TypeOffset.tp_basicsize);
-            CopySlot(py_type, type, TypeOffset.tp_itemsize);
+            CopySlot(PyPy_type, type, TypeOffset.tp_basicsize);
+            CopySlot(PyPy_type, type, TypeOffset.tp_itemsize);
 
-            CopySlot(py_type, type, TypeOffset.tp_dictoffset);
-            CopySlot(py_type, type, TypeOffset.tp_weaklistoffset);
+            CopySlot(PyPy_type, type, TypeOffset.tp_dictoffset);
+            CopySlot(PyPy_type, type, TypeOffset.tp_weaklistoffset);
 
-            CopySlot(py_type, type, TypeOffset.tp_traverse);
-            CopySlot(py_type, type, TypeOffset.tp_clear);
-            CopySlot(py_type, type, TypeOffset.tp_is_gc);
+            CopySlot(PyPy_type, type, TypeOffset.tp_traverse);
+            CopySlot(PyPy_type, type, TypeOffset.tp_clear);
+            CopySlot(PyPy_type, type, TypeOffset.tp_is_gc);
 
             // Override type slots with those of the managed implementation.
 
@@ -344,11 +344,11 @@ namespace Python.Runtime
 
             Marshal.WriteIntPtr(type, TypeOffset.tp_methods, mdefStart);
 
-            Runtime.PyType_Ready(type);
+            Runtime.PyPyType_Ready(type);
 
             IntPtr dict = Marshal.ReadIntPtr(type, TypeOffset.tp_dict);
-            IntPtr mod = Runtime.PyString_FromString("CLR");
-            Runtime.PyDict_SetItemString(dict, "__module__", mod);
+            IntPtr mod = Runtime.PyPyString_FromString("CLR");
+            Runtime.PyPyDict_SetItemString(dict, "__module__", mod);
 
             //DebugUtil.DumpType(type);
 
@@ -368,7 +368,7 @@ namespace Python.Runtime
             //IntPtr offset = (IntPtr)ObjectOffset.ob_dict;
             //Marshal.WriteIntPtr(type, TypeOffset.tp_dictoffset, offset);
 
-            //IntPtr dc = Runtime.PyDict_Copy(dict);
+            //IntPtr dc = Runtime.PyPyDict_Copy(dict);
             //Marshal.WriteIntPtr(type, TypeOffset.tp_dict, dc);
 
             Marshal.WriteIntPtr(type, TypeOffset.tp_base, base_);
@@ -386,11 +386,11 @@ namespace Python.Runtime
 
             InitializeSlots(type, impl);
 
-            Runtime.PyType_Ready(type);
+            Runtime.PyPyType_Ready(type);
 
             IntPtr tp_dict = Marshal.ReadIntPtr(type, TypeOffset.tp_dict);
-            IntPtr mod = Runtime.PyString_FromString("CLR");
-            Runtime.PyDict_SetItemString(tp_dict, "__module__", mod);
+            IntPtr mod = Runtime.PyPyString_FromString("CLR");
+            Runtime.PyPyDict_SetItemString(tp_dict, "__module__", mod);
 
             return type;
         }
@@ -401,7 +401,7 @@ namespace Python.Runtime
         /// </summary>
         internal static IntPtr AllocateTypeObject(string name)
         {
-            IntPtr type = Runtime.PyType_GenericAlloc(Runtime.PyTypeType, 0);
+            IntPtr type = Runtime.PyPyType_GenericAlloc(Runtime.PyTypeType, 0);
 
             // Cheat a little: we'll set tp_name to the internal char * of
             // the Python version of the type name - otherwise we'd have to
@@ -410,12 +410,12 @@ namespace Python.Runtime
             // For python3 we leak two objects. One for the ASCII representation
             // required for tp_name, and another for the Unicode representation
             // for ht_name.
-            IntPtr temp = Runtime.PyBytes_FromString(name);
-            IntPtr raw = Runtime.PyBytes_AS_STRING(temp);
-            temp = Runtime.PyUnicode_FromString(name);
+            IntPtr temp = Runtime.PyPyBytes_FromString(name);
+            IntPtr raw = Runtime.PyPyBytes_AS_STRING(temp);
+            temp = Runtime.PyPyUnicode_FromString(name);
 #elif PYTHON2
-            IntPtr temp = Runtime.PyString_FromString(name);
-            IntPtr raw = Runtime.PyString_AS_STRING(temp);
+            IntPtr temp = Runtime.PyPyString_FromString(name);
+            IntPtr raw = Runtime.PyPyString_AS_STRING(temp);
 #endif
             Marshal.WriteIntPtr(type, TypeOffset.tp_name, raw);
             Marshal.WriteIntPtr(type, TypeOffset.name, temp);
@@ -517,7 +517,7 @@ namespace Python.Runtime
                             var mi = new MethodInfo[1];
                             mi[0] = method;
                             MethodObject m = new TypeMethod(type, method_name, mi);
-                            Runtime.PyDict_SetItemString(dict, method_name, m.pyHandle);
+                            Runtime.PyPyDict_SetItemString(dict, method_name, m.pyHandle);
                             addedMethods.Add(method_name);
                         }
                     }

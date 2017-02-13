@@ -6,16 +6,16 @@
 // is loaded, it bootstraps the managed runtime integration layer and defers
 // to it to do initialization and put the clr module into sys.modules, etc.
 
-// The "USE_PYTHON_RUNTIME_*" defines control what extra evidence is used
+// The "USE_PyPyTHON_RUNTIME_*" defines control what extra evidence is used
 // to help the CLR find the appropriate Python.Runtime assembly.
 
 // If defined, the "pythonRuntimeVersionString" variable must be set to
 // Python.Runtime's current version.
-#define USE_PYTHON_RUNTIME_VERSION
+#define USE_PyPyTHON_RUNTIME_VERSION
 
 // If defined, the "PythonRuntimePublicKeyTokenData" data array must be
 // set to Python.Runtime's public key token. (sn -T Python.Runtin.dll)
-#define USE_PYTHON_RUNTIME_PUBLIC_KEY_TOKEN
+#define USE_PyPyTHON_RUNTIME_PUBLIC_KEY_TOKEN
 
 // If DEBUG is defined in the Build Properties, a few Console.WriteLine
 // calls are made to indicate what's going on during the load...
@@ -31,15 +31,15 @@ using RGiesecke.DllExport;
 public class clrModule
 {
 #if PYTHON3
-    [DllExport("PyInit_clr", CallingConvention.StdCall)]
-    public static IntPtr PyInit_clr()
+    [DllExport("PyPyInit_clr", CallingConvention.StdCall)]
+    public static IntPtr PyPyInit_clr()
 #elif PYTHON2
     [DllExport("initclr", CallingConvention.StdCall)]
     public static void initclr()
 #endif
     {
         DebugPrint("Attempting to load 'Python.Runtime' using standard binding rules.");
-#if USE_PYTHON_RUNTIME_PUBLIC_KEY_TOKEN
+#if USE_PyPyTHON_RUNTIME_PUBLIC_KEY_TOKEN
         var pythonRuntimePublicKeyTokenData = new byte[] { 0x50, 0x00, 0xfe, 0xa6, 0xcb, 0xa7, 0x02, 0xdd };
 #endif
 
@@ -51,12 +51,12 @@ public class clrModule
         // With an unsigned assembly, the GAC is skipped.
         var pythonRuntimeName = new AssemblyName("Python.Runtime")
         {
-#if USE_PYTHON_RUNTIME_VERSION
+#if USE_PyPyTHON_RUNTIME_VERSION
             Version = new Version("4.0.0.1"),
 #endif
             CultureInfo = CultureInfo.InvariantCulture
         };
-#if USE_PYTHON_RUNTIME_PUBLIC_KEY_TOKEN
+#if USE_PyPyTHON_RUNTIME_PUBLIC_KEY_TOKEN
         pythonRuntimeName.SetPublicKeyToken(pythonRuntimePublicKeyTokenData);
 #endif
         // We've got the AssemblyName with optional features; try to load it.

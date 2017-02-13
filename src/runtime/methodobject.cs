@@ -86,7 +86,7 @@ namespace Python.Runtime
                     str += attr.DocString;
                 }
             }
-            doc = Runtime.PyString_FromString(str);
+            doc = Runtime.PyPyString_FromString(str);
             return doc;
         }
 
@@ -116,7 +116,7 @@ namespace Python.Runtime
         {
             var self = (MethodObject)GetManagedObject(ob);
 
-            if (!Runtime.PyString_Check(key))
+            if (!Runtime.PyPyString_Check(key))
             {
                 return Exceptions.RaiseTypeError("string expected");
             }
@@ -129,7 +129,7 @@ namespace Python.Runtime
                 return doc;
             }
 
-            return Runtime.PyObject_GenericGetAttr(ob, key);
+            return Runtime.PyPyObject_GenericGetAttr(ob, key);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace Python.Runtime
                 return binding.pyHandle;
             }
 
-            if (Runtime.PyObject_IsInstance(ob, tp) < 1)
+            if (Runtime.PyPyObject_IsInstance(ob, tp) < 1)
             {
                 return Exceptions.RaiseTypeError("invalid argument");
             }
@@ -188,7 +188,7 @@ namespace Python.Runtime
         {
             var self = (MethodObject)GetManagedObject(ob);
             string s = string.Format("<method '{0}'>", self.name);
-            return Runtime.PyString_FromStringAndSize(s, s.Length);
+            return Runtime.PyPyString_FromStringAndSize(s, s.Length);
         }
 
         /// <summary>

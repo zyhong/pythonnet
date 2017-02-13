@@ -50,7 +50,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyFloat(double value)
         {
-            obj = Runtime.PyFloat_FromDouble(value);
+            obj = Runtime.PyPyFloat_FromDouble(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -68,7 +68,7 @@ namespace Python.Runtime
         {
             using (var s = new PyString(value))
             {
-                obj = Runtime.PyFloat_FromString(s.obj, IntPtr.Zero);
+                obj = Runtime.PyPyFloat_FromString(s.obj, IntPtr.Zero);
                 if (obj == IntPtr.Zero)
                 {
                     throw new PythonException();
@@ -85,7 +85,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsFloatType(PyObject value)
         {
-            return Runtime.PyFloat_Check(value.obj);
+            return Runtime.PyPyFloat_Check(value.obj);
         }
 
 
@@ -99,7 +99,7 @@ namespace Python.Runtime
         /// </remarks>
         public static PyFloat AsFloat(PyObject value)
         {
-            IntPtr op = Runtime.PyNumber_Float(value.obj);
+            IntPtr op = Runtime.PyPyNumber_Float(value.obj);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();

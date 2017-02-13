@@ -70,8 +70,8 @@ namespace Python.Runtime
 
             // It doesn't seem to matter if it's accessed through an instance (rather than via the type).
             /*if (instance != IntPtr.Zero) {
-            // This is ugly! PyObject_IsInstance() returns 1 for true, 0 for false, -1 for error...
-                if (Runtime.PyObject_IsInstance(instance, owner) < 1) {
+            // This is ugly! PyPyObject_IsInstance() returns 1 for true, 0 for false, -1 for error...
+                if (Runtime.PyPyObject_IsInstance(instance, owner) < 1) {
                     return Exceptions.RaiseTypeError("How in the world could that happen!");
                 }
             }*/
@@ -138,7 +138,7 @@ namespace Python.Runtime
                 int idx = str.IndexOf("(");
                 doc += string.Format("{0}{1}", name, str.Substring(idx));
             }
-            self.repr = Runtime.PyString_FromString(doc);
+            self.repr = Runtime.PyPyString_FromString(doc);
             Runtime.XIncref(self.repr);
             return self.repr;
         }
@@ -193,7 +193,7 @@ namespace Python.Runtime
             var self = (BoundContructor)GetManagedObject(op);
             // Even though a call with null ctorInfo just produces the old behavior
             /*if (self.ctorInfo == null) {
-                string msg = "Usage: Class.Overloads[CLR_or_python_Type, ...]";
+                string msg = "Usage: Class.Overloads[CLR_or_PyPython_Type, ...]";
                 return Exceptions.RaiseTypeError(msg);
             }*/
             // Bind using ConstructorBinder.Bind and invoke the ctor providing a null instancePtr
@@ -224,7 +224,7 @@ namespace Python.Runtime
             string str = self.ctorInfo.ToString();
             int idx = str.IndexOf("(");
             str = string.Format("returns a new {0}{1}", name, str.Substring(idx));
-            self.repr = Runtime.PyString_FromString(str);
+            self.repr = Runtime.PyPyString_FromString(str);
             Runtime.XIncref(self.repr);
             return self.repr;
         }

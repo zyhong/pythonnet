@@ -197,7 +197,7 @@ namespace Python.Runtime
         {
             // Note: the managed GC thread can run and try to free one of
             // these *after* the Python runtime has been finalized!
-            if (Runtime.Py_IsInitialized() > 0)
+            if (Runtime.PyPy_IsInitialized() > 0)
             {
                 IntPtr gs = PythonEngine.AcquireLock();
                 Runtime.XDecref(target);
@@ -228,7 +228,7 @@ namespace Python.Runtime
         {
             MethodInfo method = dtype.GetMethod("Invoke");
             ParameterInfo[] pi = method.GetParameters();
-            IntPtr pyargs = Runtime.PyTuple_New(pi.Length);
+            IntPtr pyargs = Runtime.PyPyTuple_New(pi.Length);
             Type rtype = method.ReturnType;
 
             for (var i = 0; i < pi.Length; i++)
@@ -236,10 +236,10 @@ namespace Python.Runtime
                 // Here we own the reference to the Python value, and we
                 // give the ownership to the arg tuple.
                 IntPtr arg = Converter.ToPython(args[i], pi[i].ParameterType);
-                Runtime.PyTuple_SetItem(pyargs, i, arg);
+                Runtime.PyPyTuple_SetItem(pyargs, i, arg);
             }
 
-            IntPtr op = Runtime.PyObject_Call(target, pyargs, IntPtr.Zero);
+            IntPtr op = Runtime.PyPyObject_Call(target, pyargs, IntPtr.Zero);
             Runtime.XDecref(pyargs);
 
             if (op == IntPtr.Zero)

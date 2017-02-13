@@ -8,10 +8,10 @@ namespace Python.Runtime
     /// </summary>
     internal class ImportHook
     {
-        private static IntPtr py_import;
+        private static IntPtr PyPy_import;
         private static CLRModule root;
         private static MethodWrapper hook;
-        private static IntPtr py_clr_module;
+        private static IntPtr PyPy_clr_module;
 
 #if PYTHON3
         private static IntPtr module_def = IntPtr.Zero;
@@ -34,15 +34,15 @@ namespace Python.Runtime
             // built-in Python __import__ with our own. This isn't ideal,
             // but it provides the most "Pythonic" way of dealing with CLR
             // modules (Python doesn't provide a way to emulate packages).
-            IntPtr dict = Runtime.PyImport_GetModuleDict();
+            IntPtr dict = Runtime.PyPyImport_GetModuleDict();
 
             IntPtr mod = Runtime.IsPython3
-                ? Runtime.PyImport_ImportModule("builtins")
-                : Runtime.PyDict_GetItemString(dict, "__builtin__");
+                ? Runtime.PyPyImport_ImportModule("builtins")
+                : Runtime.PyPyDict_GetItemString(dict, "__builtin__");
 
-            py_import = Runtime.PyObject_GetAttrString(mod, "__import__");
+            PyPy_import = Runtime.PyPyObject_GetAttrString(mod, "__import__");
             hook = new MethodWrapper(typeof(ImportHook), "__import__", "TernaryFunc");
-            Runtime.PyObject_SetAttrString(mod, "__import__", hook.ptr);
+            Runtime.PyPyObject_SetAttrString(mod, "__import__", hook.ptr);
             Runtime.XDecref(hook.ptr);
 
             root = new CLRModule();
@@ -50,20 +50,20 @@ namespace Python.Runtime
 #if PYTHON3
             // create a python module with the same methods as the clr module-like object
             InitializeModuleDef();
-            py_clr_module = Runtime.PyModule_Create2(module_def, 3);
+            PyPy_clr_module = Runtime.PyPyModule_Create2(module_def, 3);
 
             // both dicts are borrowed references
-            IntPtr mod_dict = Runtime.PyModule_GetDict(py_clr_module);
-            IntPtr clr_dict = Runtime._PyObject_GetDictPtr(root.pyHandle); // PyObject**
+            IntPtr mod_dict = Runtime.PyPyModule_GetDict(PyPy_clr_module);
+            IntPtr clr_dict = Runtime._PyPyObject_GetDictPtr(root.pyHandle); // PyObject**
             clr_dict = (IntPtr)Marshal.PtrToStructure(clr_dict, typeof(IntPtr));
 
-            Runtime.PyDict_Update(mod_dict, clr_dict);
+            Runtime.PyPyDict_Update(mod_dict, clr_dict);
 #elif PYTHON2
             Runtime.XIncref(root.pyHandle); // we are using the module two times
-            py_clr_module = root.pyHandle; // Alias handle for PY2/PY3
+            PyPy_clr_module = root.pyHandle; // Alias handle for PY2/PY3
 #endif
-            Runtime.PyDict_SetItemString(dict, "CLR", py_clr_module);
-            Runtime.PyDict_SetItemString(dict, "clr", py_clr_module);
+            Runtime.PyPyDict_SetItemString(dict, "CLR", PyPy_clr_module);
+            Runtime.PyPyDict_SetItemString(dict, "clr", PyPy_clr_module);
         }
 
 
@@ -72,11 +72,11 @@ namespace Python.Runtime
         /// </summary>
         internal static void Shutdown()
         {
-            if (Runtime.Py_IsInitialized() != 0)
+            if (Runtime.PyPy_IsInitialized() != 0)
             {
-                Runtime.XDecref(py_clr_module);
+                Runtime.XDecref(PyPy_clr_module);
                 Runtime.XDecref(root.pyHandle);
-                Runtime.XDecref(py_import);
+                Runtime.XDecref(PyPy_import);
             }
         }
 
@@ -89,26 +89,26 @@ namespace Python.Runtime
 
             if (Runtime.IsPython2)
             {
-                Runtime.XIncref(py_clr_module);
-                return py_clr_module;
+                Runtime.XIncref(PyPy_clr_module);
+                return PyPy_clr_module;
             }
 
             // Python 3
             // update the module dictionary with the contents of the root dictionary
             root.LoadNames();
-            IntPtr py_mod_dict = Runtime.PyModule_GetDict(py_clr_module);
-            IntPtr clr_dict = Runtime._PyObject_GetDictPtr(root.pyHandle); // PyObject**
+            IntPtr PyPy_mod_dict = Runtime.PyPyModule_GetDict(PyPy_clr_module);
+            IntPtr clr_dict = Runtime._PyPyObject_GetDictPtr(root.pyHandle); // PyObject**
             clr_dict = (IntPtr)Marshal.PtrToStructure(clr_dict, typeof(IntPtr));
-            Runtime.PyDict_Update(py_mod_dict, clr_dict);
+            Runtime.PyPyDict_Update(PyPy_mod_dict, clr_dict);
 
             // find any items from the from list and get them from the root if they're not
             // already in the module dictionary
             if (fromList != null && fromList != IntPtr.Zero)
             {
-                if (Runtime.PyTuple_Check(fromList.GetValueOrDefault()))
+                if (Runtime.PyPyTuple_Check(fromList.GetValueOrDefault()))
                 {
-                    Runtime.XIncref(py_mod_dict);
-                    using (var mod_dict = new PyDict(py_mod_dict))
+                    Runtime.XIncref(PyPy_mod_dict);
+                    using (var mod_dict = new PyDict(PyPy_mod_dict))
                     {
                         Runtime.XIncref(fromList.GetValueOrDefault());
                         using (var from = new PyTuple(fromList.GetValueOrDefault()))
@@ -142,8 +142,8 @@ namespace Python.Runtime
                     }
                 }
             }
-            Runtime.XIncref(py_clr_module);
-            return py_clr_module;
+            Runtime.XIncref(PyPy_clr_module);
+            return PyPy_clr_module;
         }
 
         /// <summary>
@@ -152,19 +152,19 @@ namespace Python.Runtime
         public static IntPtr __import__(IntPtr self, IntPtr args, IntPtr kw)
         {
             // Replacement for the builtin __import__. The original import
-            // hook is saved as this.py_import. This version handles CLR
+            // hook is saved as this.PyPy_import. This version handles CLR
             // import and defers to the normal builtin for everything else.
 
-            int num_args = Runtime.PyTuple_Size(args);
+            int num_args = Runtime.PyPyTuple_Size(args);
             if (num_args < 1)
             {
                 return Exceptions.RaiseTypeError("__import__() takes at least 1 argument (0 given)");
             }
 
             // borrowed reference
-            IntPtr py_mod_name = Runtime.PyTuple_GetItem(args, 0);
-            if (py_mod_name == IntPtr.Zero ||
-                !Runtime.IsStringType(py_mod_name))
+            IntPtr PyPy_mod_name = Runtime.PyPyTuple_GetItem(args, 0);
+            if (PyPy_mod_name == IntPtr.Zero ||
+                !Runtime.IsStringType(PyPy_mod_name))
             {
                 return Exceptions.RaiseTypeError("string expected");
             }
@@ -176,15 +176,15 @@ namespace Python.Runtime
             var fromlist = false;
             if (num_args >= 4)
             {
-                fromList = Runtime.PyTuple_GetItem(args, 3);
+                fromList = Runtime.PyPyTuple_GetItem(args, 3);
                 if (fromList != IntPtr.Zero &&
-                    Runtime.PyObject_IsTrue(fromList) == 1)
+                    Runtime.PyPyObject_IsTrue(fromList) == 1)
                 {
                     fromlist = true;
                 }
             }
 
-            string mod_name = Runtime.GetManagedString(py_mod_name);
+            string mod_name = Runtime.GetManagedString(PyPy_mod_name);
             // Check these BEFORE the built-in import runs; may as well
             // do the Incref()ed return here, since we've already found
             // the module.
@@ -193,10 +193,10 @@ namespace Python.Runtime
                 IntPtr clr_module = GetCLRModule(fromList);
                 if (clr_module != IntPtr.Zero)
                 {
-                    IntPtr sys_modules = Runtime.PyImport_GetModuleDict();
+                    IntPtr sys_modules = Runtime.PyPyImport_GetModuleDict();
                     if (sys_modules != IntPtr.Zero)
                     {
-                        Runtime.PyDict_SetItemString(sys_modules, "clr", clr_module);
+                        Runtime.PyPyDict_SetItemString(sys_modules, "clr", clr_module);
                     }
                 }
                 return clr_module;
@@ -207,10 +207,10 @@ namespace Python.Runtime
                 IntPtr clr_module = GetCLRModule(fromList);
                 if (clr_module != IntPtr.Zero)
                 {
-                    IntPtr sys_modules = Runtime.PyImport_GetModuleDict();
+                    IntPtr sys_modules = Runtime.PyPyImport_GetModuleDict();
                     if (sys_modules != IntPtr.Zero)
                     {
-                        Runtime.PyDict_SetItemString(sys_modules, "clr", clr_module);
+                        Runtime.PyPyDict_SetItemString(sys_modules, "clr", clr_module);
                     }
                 }
                 return clr_module;
@@ -233,7 +233,7 @@ namespace Python.Runtime
                 // Turns out that the AssemblyManager.ResolveHandler() checks to see if any
                 // Assembly's FullName.ToLower().StartsWith(name.ToLower()), which makes very
                 // little sense to me.
-                IntPtr res = Runtime.PyObject_Call(py_import, args, kw);
+                IntPtr res = Runtime.PyPyObject_Call(PyPy_import, args, kw);
                 if (res != IntPtr.Zero)
                 {
                     // There was no error.
@@ -277,14 +277,14 @@ namespace Python.Runtime
                 {
                     // May be called when a module being imported imports a module.
                     // In particular, I've seen decimal import copy import org.python.core
-                    return Runtime.PyObject_Call(py_import, args, kw);
+                    return Runtime.PyPyObject_Call(PyPy_import, args, kw);
                 }
             }
 
             // See if sys.modules for this interpreter already has the
             // requested module. If so, just return the existing module.
-            IntPtr modules = Runtime.PyImport_GetModuleDict();
-            IntPtr module = Runtime.PyDict_GetItem(modules, py_mod_name);
+            IntPtr modules = Runtime.PyPyImport_GetModuleDict();
+            IntPtr module = Runtime.PyPyDict_GetItem(modules, PyPy_mod_name);
 
             if (module != IntPtr.Zero)
             {
@@ -297,7 +297,7 @@ namespace Python.Runtime
                 {
                     return GetCLRModule(fromList);
                 }
-                module = Runtime.PyDict_GetItemString(modules, names[0]);
+                module = Runtime.PyPyDict_GetItemString(modules, names[0]);
                 Runtime.XIncref(module);
                 return module;
             }
@@ -336,20 +336,20 @@ namespace Python.Runtime
                 }
 
                 // Add the module to sys.modules
-                Runtime.PyDict_SetItemString(modules, tail.moduleName, tail.pyHandle);
+                Runtime.PyPyDict_SetItemString(modules, tail.moduleName, tail.pyHandle);
 
                 // If imported from CLR add CLR.<modulename> to sys.modules as well
                 if (clr_prefix != null)
                 {
-                    Runtime.PyDict_SetItemString(modules, clr_prefix + tail.moduleName, tail.pyHandle);
+                    Runtime.PyPyDict_SetItemString(modules, clr_prefix + tail.moduleName, tail.pyHandle);
                 }
             }
 
             ModuleObject mod = fromlist ? tail : head;
 
-            if (fromlist && Runtime.PySequence_Size(fromList) == 1)
+            if (fromlist && Runtime.PyPySequence_Size(fromList) == 1)
             {
-                IntPtr fp = Runtime.PySequence_GetItem(fromList, 0);
+                IntPtr fp = Runtime.PyPySequence_GetItem(fromList, 0);
                 if (!CLRModule.preload && Runtime.GetManagedString(fp) == "*")
                 {
                     mod.LoadNames();

@@ -54,7 +54,7 @@ namespace Python.Runtime
                 list = new ArrayList();
                 reg[key] = list;
             }
-            list.Add(new Handler(Runtime.PyObject_Hash(handler), d));
+            list.Add(new Handler(Runtime.PyPyObject_Hash(handler), d));
 
             // Note that AddEventHandler helper only works for public events,
             // so we have to get the underlying add method explicitly.
@@ -78,7 +78,7 @@ namespace Python.Runtime
                 obj = co.inst;
             }
 
-            IntPtr hash = Runtime.PyObject_Hash(handler);
+            IntPtr hash = Runtime.PyPyObject_Hash(handler);
             if (Exceptions.ErrorOccurred() || reg == null)
             {
                 Exceptions.SetError(Exceptions.ValueError, "unknown event handler");
@@ -151,7 +151,7 @@ namespace Python.Runtime
                 return binding.pyHandle;
             }
 
-            if (Runtime.PyObject_IsInstance(ob, tp) < 1)
+            if (Runtime.PyPyObject_IsInstance(ob, tp) < 1)
             {
                 return Exceptions.RaiseTypeError("invalid argument");
             }
@@ -188,7 +188,7 @@ namespace Python.Runtime
         public static IntPtr tp_repr(IntPtr ob)
         {
             var self = (EventObject)GetManagedObject(ob);
-            return Runtime.PyString_FromString($"<event '{self.name}'>");
+            return Runtime.PyPyString_FromString($"<event '{self.name}'>");
         }
 
 

@@ -287,7 +287,7 @@ namespace Python.Runtime
         {
             // loop to find match, return invoker w/ or /wo error
             MethodBase[] _methods = null;
-            int pynargs = Runtime.PyTuple_Size(args);
+            int pynargs = Runtime.PyPyTuple_Size(args);
             object arg;
             var isGeneric = false;
             ArrayList defaultArgList = null;
@@ -355,11 +355,11 @@ namespace Python.Runtime
                             {
                                 // map remaining Python arguments to a tuple since
                                 // the managed function accepts it - hopefully :]
-                                op = Runtime.PyTuple_GetSlice(args, arrayStart, pynargs);
+                                op = Runtime.PyPyTuple_GetSlice(args, arrayStart, pynargs);
                             }
                             else
                             {
-                                op = Runtime.PyTuple_GetItem(args, n);
+                                op = Runtime.PyPyTuple_GetItem(args, n);
                             }
 
                             // this logic below handles cases when multiple overloading methods
@@ -370,7 +370,7 @@ namespace Python.Runtime
                             if (_methods.Length > 1)
                             {
                                 pyoptype = IntPtr.Zero;
-                                pyoptype = Runtime.PyObject_Type(op);
+                                pyoptype = Runtime.PyPyObject_Type(op);
                                 Exceptions.Clear();
                                 if (pyoptype != IntPtr.Zero)
                                 {
@@ -386,7 +386,7 @@ namespace Python.Runtime
                                 if (pi[n].ParameterType != clrtype)
                                 {
                                     IntPtr pytype = Converter.GetPythonTypeByAlias(pi[n].ParameterType);
-                                    pyoptype = Runtime.PyObject_Type(op);
+                                    pyoptype = Runtime.PyPyObject_Type(op);
                                     Exceptions.Clear();
                                     if (pyoptype != IntPtr.Zero)
                                     {
@@ -565,9 +565,9 @@ namespace Python.Runtime
                 int c = pi.Length;
                 var n = 0;
 
-                IntPtr t = Runtime.PyTuple_New(binding.outs + 1);
+                IntPtr t = Runtime.PyPyTuple_New(binding.outs + 1);
                 IntPtr v = Converter.ToPython(result, mi.ReturnType);
-                Runtime.PyTuple_SetItem(t, n, v);
+                Runtime.PyPyTuple_SetItem(t, n, v);
                 n++;
 
                 for (var i = 0; i < c; i++)
@@ -576,14 +576,14 @@ namespace Python.Runtime
                     if (pi[i].IsOut || pt.IsByRef)
                     {
                         v = Converter.ToPython(binding.args[i], pt);
-                        Runtime.PyTuple_SetItem(t, n, v);
+                        Runtime.PyPyTuple_SetItem(t, n, v);
                         n++;
                     }
                 }
 
                 if (binding.outs == 1 && mi.ReturnType == typeof(void))
                 {
-                    v = Runtime.PyTuple_GetItem(t, 1);
+                    v = Runtime.PyPyTuple_GetItem(t, 1);
                     Runtime.XIncref(v);
                     Runtime.XDecref(t);
                     return v;

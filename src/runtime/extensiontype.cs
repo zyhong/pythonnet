@@ -26,7 +26,7 @@ namespace Python.Runtime
             //    DebugUtil.DumpType(tp);
             //}
 
-            IntPtr py = Runtime.PyType_GenericAlloc(tp, 0);
+            IntPtr py = Runtime.PyPyType_GenericAlloc(tp, 0);
 
             GCHandle gc = GCHandle.Alloc(this);
             Marshal.WriteIntPtr(py, ObjectOffset.magic(tp), (IntPtr)gc);
@@ -36,7 +36,7 @@ namespace Python.Runtime
             // concrete extension types, so untrack the object to save calls
             // from Python into the managed runtime that are pure overhead.
 
-            Runtime.PyObject_GC_UnTrack(py);
+            Runtime.PyPyObject_GC_UnTrack(py);
 
             tpHandle = tp;
             pyHandle = py;
@@ -49,7 +49,7 @@ namespace Python.Runtime
         /// </summary>
         public static void FinalizeObject(ManagedType self)
         {
-            Runtime.PyObject_GC_Del(self.pyHandle);
+            Runtime.PyPyObject_GC_Del(self.pyHandle);
             Runtime.XDecref(self.tpHandle);
             self.gcHandle.Free();
         }

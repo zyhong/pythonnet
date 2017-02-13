@@ -25,7 +25,7 @@ namespace Python.Runtime
                 {
                     Console.WriteLine("null arg to print");
                 }
-                IntPtr ob = Runtime.PyObject_Repr(t);
+                IntPtr ob = Runtime.PyPyObject_Repr(t);
                 result += Runtime.GetManagedString(ob);
                 Runtime.XDecref(ob);
                 result += " ";
@@ -88,7 +88,7 @@ namespace Python.Runtime
         [Conditional("DEBUG")]
         internal static void DumpInst(IntPtr ob)
         {
-            IntPtr tp = Runtime.PyObject_TYPE(ob);
+            IntPtr tp = Runtime.PyPyObject_TYPE(ob);
             var sz = (int)Marshal.ReadIntPtr(tp, TypeOffset.tp_basicsize);
 
             for (var i = 0; i < sz; i += IntPtr.Size)

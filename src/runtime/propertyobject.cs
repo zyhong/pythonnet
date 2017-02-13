@@ -159,7 +159,7 @@ namespace Python.Runtime
         {
             var self = (PropertyObject)GetManagedObject(ob);
             string s = $"<property '{self.info.Name}'>";
-            return Runtime.PyString_FromStringAndSize(s, s.Length);
+            return Runtime.PyPyString_FromStringAndSize(s, s.Length);
         }
     }
 }

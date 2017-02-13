@@ -74,8 +74,8 @@ namespace Python.Runtime
         static ObjectOffset()
         {
             int size = IntPtr.Size;
-            var n = 0; // Py_TRACE_REFS add two pointers to PyObject_HEAD
-#if Py_DEBUG
+            var n = 0; // PyPy_TRACE_REFS add two pointers to PyPyObject_HEAD
+#if PyPy_DEBUG
             _ob_next = 0;
             _ob_prev = 1 * size;
             n = 2;
@@ -88,8 +88,8 @@ namespace Python.Runtime
 
         public static int magic(IntPtr ob)
         {
-            if ((Runtime.PyObject_TypeCheck(ob, Exceptions.BaseException) ||
-                 (Runtime.PyType_Check(ob) && Runtime.PyType_IsSubtype(ob, Exceptions.BaseException))))
+            if ((Runtime.PyPyObject_TypeCheck(ob, Exceptions.BaseException) ||
+                 (Runtime.PyPyType_Check(ob) && Runtime.PyPyType_IsSubtype(ob, Exceptions.BaseException))))
             {
                 return ExceptionOffset.ob_data;
             }
@@ -98,8 +98,8 @@ namespace Python.Runtime
 
         public static int DictOffset(IntPtr ob)
         {
-            if ((Runtime.PyObject_TypeCheck(ob, Exceptions.BaseException) ||
-                 (Runtime.PyType_Check(ob) && Runtime.PyType_IsSubtype(ob, Exceptions.BaseException))))
+            if ((Runtime.PyPyObject_TypeCheck(ob, Exceptions.BaseException) ||
+                 (Runtime.PyPyType_Check(ob) && Runtime.PyPyType_IsSubtype(ob, Exceptions.BaseException))))
             {
                 return ExceptionOffset.ob_dict;
             }
@@ -108,19 +108,19 @@ namespace Python.Runtime
 
         public static int Size(IntPtr ob)
         {
-            if ((Runtime.PyObject_TypeCheck(ob, Exceptions.BaseException) ||
-                 (Runtime.PyType_Check(ob) && Runtime.PyType_IsSubtype(ob, Exceptions.BaseException))))
+            if ((Runtime.PyPyObject_TypeCheck(ob, Exceptions.BaseException) ||
+                 (Runtime.PyPyType_Check(ob) && Runtime.PyPyType_IsSubtype(ob, Exceptions.BaseException))))
             {
                 return ExceptionOffset.Size();
             }
-#if Py_DEBUG
+#if PyPy_DEBUG
             return 6 * IntPtr.Size;
 #else
             return 4 * IntPtr.Size;
 #endif
         }
 
-#if Py_DEBUG
+#if PyPy_DEBUG
         public static int _ob_next;
         public static int _ob_prev;
 #endif
@@ -149,8 +149,8 @@ namespace Python.Runtime
             return ob_data + IntPtr.Size;
         }
 
-        // PyException_HEAD
-        // (start after PyObject_HEAD)
+        // PyPyException_HEAD
+        // (start after PyPyObject_HEAD)
         public static int dict = 0;
         public static int args = 0;
 #if PYTHON2
@@ -185,13 +185,13 @@ namespace Python.Runtime
 
         /* The *real* layout of a type object when allocated on the heap */
         //typedef struct _heaptypeobject {
-#if Py_DEBUG // #ifdef Py_TRACE_REFS
-/* _PyObject_HEAD_EXTRA defines pointers to support a doubly-linked list of all live heap objects. */
+#if PyPy_DEBUG // #ifdef PyPy_TRACE_REFS
+/* _PyPyObject_HEAD_EXTRA defines pointers to support a doubly-linked list of all live heap objects. */
         public static int _ob_next = 0;
         public static int _ob_prev = 0;
 #endif
-        // PyObject_VAR_HEAD {
-        //     PyObject_HEAD {
+        // PyPyObject_VAR_HEAD {
+        //     PyPyObject_HEAD {
         public static int ob_refcnt = 0;
         public static int ob_type = 0;
         // }
@@ -241,12 +241,12 @@ namespace Python.Runtime
         }
 
         // typedef struct PyModuleDef{
-        //  typedef struct PyModuleDef_Base {
-        // starts after PyObject_HEAD (TypeOffset.ob_type + 1)
+        //  typedef struct PyPyModuleDef_Base {
+        // starts after PyPyObject_HEAD (TypeOffset.ob_type + 1)
         public static int m_init = 0;
         public static int m_index = 0;
         public static int m_copy = 0;
-        //  } PyModuleDef_Base
+        //  } PyPyModuleDef_Base
         public static int m_name = 0;
         public static int m_doc = 0;
         public static int m_size = 0;

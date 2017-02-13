@@ -41,7 +41,7 @@ namespace Python.Runtime
                 }
                 str += t.ToString();
             }
-            return Runtime.PyString_FromString(str);
+            return Runtime.PyPyString_FromString(str);
         }
 
 
@@ -67,13 +67,13 @@ namespace Python.Runtime
             // convertible primitive types, just convert the arg directly.
             if (type.IsPrimitive || type == typeof(string))
             {
-                if (Runtime.PyTuple_Size(args) != 1)
+                if (Runtime.PyPyTuple_Size(args) != 1)
                 {
                     Exceptions.SetError(Exceptions.TypeError, "no constructors match given arguments");
                     return IntPtr.Zero;
                 }
 
-                IntPtr op = Runtime.PyTuple_GetItem(args, 0);
+                IntPtr op = Runtime.PyPyTuple_GetItem(args, 0);
                 object result;
 
                 if (!Converter.ToManaged(op, type, out result, true))
@@ -117,7 +117,7 @@ namespace Python.Runtime
             // construct and return an array type of the given element type.
             if (type == typeof(Array))
             {
-                if (Runtime.PyTuple_Check(idx))
+                if (Runtime.PyPyTuple_Check(idx))
                 {
                     return Exceptions.RaiseTypeError("type expected");
                 }
@@ -160,7 +160,7 @@ namespace Python.Runtime
         public static IntPtr mp_subscript(IntPtr ob, IntPtr idx)
         {
             //ManagedType self = GetManagedObject(ob);
-            IntPtr tp = Runtime.PyObject_TYPE(ob);
+            IntPtr tp = Runtime.PyPyObject_TYPE(ob);
             var cls = (ClassBase)GetManagedObject(tp);
 
             if (cls.indexer == null || !cls.indexer.CanGet)
@@ -175,11 +175,11 @@ namespace Python.Runtime
             IntPtr args = idx;
             var free = false;
 
-            if (!Runtime.PyTuple_Check(idx))
+            if (!Runtime.PyPyTuple_Check(idx))
             {
-                args = Runtime.PyTuple_New(1);
+                args = Runtime.PyPyTuple_New(1);
                 Runtime.XIncref(idx);
-                Runtime.PyTuple_SetItem(args, 0, idx);
+                Runtime.PyPyTuple_SetItem(args, 0, idx);
                 free = true;
             }
 
@@ -206,7 +206,7 @@ namespace Python.Runtime
         public static int mp_ass_subscript(IntPtr ob, IntPtr idx, IntPtr v)
         {
             //ManagedType self = GetManagedObject(ob);
-            IntPtr tp = Runtime.PyObject_TYPE(ob);
+            IntPtr tp = Runtime.PyPyObject_TYPE(ob);
             var cls = (ClassBase)GetManagedObject(tp);
 
             if (cls.indexer == null || !cls.indexer.CanSet)
@@ -221,33 +221,33 @@ namespace Python.Runtime
             IntPtr args = idx;
             var free = false;
 
-            if (!Runtime.PyTuple_Check(idx))
+            if (!Runtime.PyPyTuple_Check(idx))
             {
-                args = Runtime.PyTuple_New(1);
+                args = Runtime.PyPyTuple_New(1);
                 Runtime.XIncref(idx);
-                Runtime.PyTuple_SetItem(args, 0, idx);
+                Runtime.PyPyTuple_SetItem(args, 0, idx);
                 free = true;
             }
 
             // Get the args passed in.
-            int i = Runtime.PyTuple_Size(args);
+            int i = Runtime.PyPyTuple_Size(args);
             IntPtr defaultArgs = cls.indexer.GetDefaultArgs(args);
-            int numOfDefaultArgs = Runtime.PyTuple_Size(defaultArgs);
+            int numOfDefaultArgs = Runtime.PyPyTuple_Size(defaultArgs);
             int temp = i + numOfDefaultArgs;
-            IntPtr real = Runtime.PyTuple_New(temp + 1);
+            IntPtr real = Runtime.PyPyTuple_New(temp + 1);
             for (var n = 0; n < i; n++)
             {
-                IntPtr item = Runtime.PyTuple_GetItem(args, n);
+                IntPtr item = Runtime.PyPyTuple_GetItem(args, n);
                 Runtime.XIncref(item);
-                Runtime.PyTuple_SetItem(real, n, item);
+                Runtime.PyPyTuple_SetItem(real, n, item);
             }
 
             // Add Default Args if needed
             for (var n = 0; n < numOfDefaultArgs; n++)
             {
-                IntPtr item = Runtime.PyTuple_GetItem(defaultArgs, n);
+                IntPtr item = Runtime.PyPyTuple_GetItem(defaultArgs, n);
                 Runtime.XIncref(item);
-                Runtime.PyTuple_SetItem(real, n + i, item);
+                Runtime.PyPyTuple_SetItem(real, n + i, item);
             }
             // no longer need defaultArgs
             Runtime.XDecref(defaultArgs);
@@ -255,7 +255,7 @@ namespace Python.Runtime
 
             // Add value to argument list
             Runtime.XIncref(v);
-            Runtime.PyTuple_SetItem(real, i, v);
+            Runtime.PyPyTuple_SetItem(real, i, v);
 
             try
             {
@@ -289,7 +289,7 @@ namespace Python.Runtime
         public static IntPtr tp_call(IntPtr ob, IntPtr args, IntPtr kw)
         {
             //ManagedType self = GetManagedObject(ob);
-            IntPtr tp = Runtime.PyObject_TYPE(ob);
+            IntPtr tp = Runtime.PyPyObject_TYPE(ob);
             var cb = (ClassBase)GetManagedObject(tp);
 
             if (cb.type != typeof(Delegate))

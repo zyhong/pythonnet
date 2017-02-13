@@ -57,67 +57,67 @@ namespace Python.Runtime
         {
             get
             {
-                string result = Runtime.Py_GetProgramName();
+                string result = Runtime.PyPy_GetProgramName();
                 if (result == null)
                 {
                     return "";
                 }
                 return result;
             }
-            set { Runtime.Py_SetProgramName(value); }
+            set { Runtime.PyPy_SetProgramName(value); }
         }
 
         public static string PythonHome
         {
             get
             {
-                string result = Runtime.Py_GetPythonHome();
+                string result = Runtime.PyPy_GetPythonHome();
                 if (result == null)
                 {
                     return "";
                 }
                 return result;
             }
-            set { Runtime.Py_SetPythonHome(value); }
+            set { Runtime.PyPy_SetPythonHome(value); }
         }
 
         public static string PythonPath
         {
             get
             {
-                string result = Runtime.Py_GetPath();
+                string result = Runtime.PyPy_GetPath();
                 if (result == null)
                 {
                     return "";
                 }
                 return result;
             }
-            set { Runtime.Py_SetPath(value); }
+            set { Runtime.PyPy_SetPath(value); }
         }
 
         public static string Version
         {
-            get { return Runtime.Py_GetVersion(); }
+            get { return Runtime.PyPy_GetVersion(); }
         }
 
         public static string BuildInfo
         {
-            get { return Runtime.Py_GetBuildInfo(); }
+            get { return Runtime.PyPy_GetBuildInfo(); }
         }
 
         public static string Platform
         {
-            get { return Runtime.Py_GetPlatform(); }
+            get { return Runtime.PyPy_GetPlatform(); }
         }
 
         public static string Copyright
         {
-            get { return Runtime.Py_GetCopyright(); }
+            get { return Runtime.PyPy_GetCopyright(); }
         }
 
         public static int RunSimpleString(string code)
         {
-            return Runtime.PyRun_SimpleString(code);
+            return Runtime.PyPyRun_SimpleString(code);
         }
 
         public static void Initialize()
@@ -150,7 +150,7 @@ namespace Python.Runtime
 
                 Py.SetArgv(args);
 
-                // register the atexit callback (this doesn't use Py_AtExit as the C atexit
+                // register the atexit callback (this doesn't use PyPy_AtExit as the C atexit
                 // callbacks are called after python is fully finalized but the python ones
                 // are called while the python engine is still running).
                 string code =
@@ -164,15 +164,15 @@ namespace Python.Runtime
 
                 // Load the clr.py resource into the clr module
                 IntPtr clr = Python.Runtime.ImportHook.GetCLRModule();
-                IntPtr clr_dict = Runtime.PyModule_GetDict(clr);
+                IntPtr clr_dict = Runtime.PyPyModule_GetDict(clr);
 
                 var locals = new PyDict();
                 try
                 {
-                    IntPtr module = Runtime.PyImport_AddModule("clr._extras");
-                    IntPtr module_globals = Runtime.PyModule_GetDict(module);
-                    IntPtr builtins = Runtime.PyEval_GetBuiltins();
-                    Runtime.PyDict_SetItemString(module_globals, "__builtins__", builtins);
+                    IntPtr module = Runtime.PyPyImport_AddModule("clr._extras");
+                    IntPtr module_globals = Runtime.PyPyModule_GetDict(module);
+                    IntPtr builtins = Runtime.PyPyEval_GetBuiltins();
+                    Runtime.PyPyDict_SetItemString(module_globals, "__builtins__", builtins);
 
                     Assembly assembly = Assembly.GetExecutingAssembly();
                     using (Stream stream = assembly.GetManifestResourceStream("clr.py"))
@@ -190,13 +190,13 @@ namespace Python.Runtime
 
                     // add the imported module to the clr module, and copy the API functions
                     // and decorators into the main clr module.
-                    Runtime.PyDict_SetItemString(clr_dict, "_extras", module);
+                    Runtime.PyPyDict_SetItemString(clr_dict, "_extras", module);
                     foreach (PyObject key in locals.Keys())
                     {
                         if (!key.ToString().StartsWith("_") || key.ToString().Equals("__version__"))
                         {
                             PyObject value = locals[key];
-                            Runtime.PyDict_SetItem(clr_dict, key.Handle, value.Handle);
+                            Runtime.PyPyDict_SetItem(clr_dict, key.Handle, value.Handle);
                             value.Dispose();
                         }
                         key.Dispose();
@@ -306,7 +306,7 @@ namespace Python.Runtime
         /// </remarks>
         public static IntPtr AcquireLock()
         {
-            return Runtime.PyGILState_Ensure();
+            return Runtime.PyPyGILState_Ensure();
         }
 
 
@@ -321,7 +321,7 @@ namespace Python.Runtime
         /// </remarks>
         public static void ReleaseLock(IntPtr gs)
         {
-            Runtime.PyGILState_Release(gs);
+            Runtime.PyPyGILState_Release(gs);
         }
 
 
@@ -330,14 +330,14 @@ namespace Python.Runtime
         /// </summary>
         /// <remarks>
         /// Release the Python global interpreter lock to allow other threads
-        /// to run. This is equivalent to the Py_BEGIN_ALLOW_THREADS macro
+        /// to run. This is equivalent to the PyPy_BEGIN_ALLOW_THREADS macro
         /// provided by the C Python API.
         /// For more information, see the "Extending and Embedding" section
         /// of the Python documentation on www.python.org.
         /// </remarks>
         public static IntPtr BeginAllowThreads()
         {
-            return Runtime.PyEval_SaveThread();
+            return Runtime.PyPyEval_SaveThread();
         }
 
 
@@ -346,14 +346,14 @@ namespace Python.Runtime
         /// </summary>
         /// <remarks>
         /// Re-aquire the Python global interpreter lock for the current
-        /// thread. This is equivalent to the Py_END_ALLOW_THREADS macro
+        /// thread. This is equivalent to the PyPy_END_ALLOW_THREADS macro
         /// provided by the C Python API.
         /// For more information, see the "Extending and Embedding" section
         /// of the Python documentation on www.python.org.
         /// </remarks>
         public static void EndAllowThreads(IntPtr ts)
         {
-            Runtime.PyEval_RestoreThread(ts);
+            Runtime.PyPyEval_RestoreThread(ts);
         }
 
 
@@ -367,7 +367,7 @@ namespace Python.Runtime
         /// </remarks>
         public static PyObject ImportModule(string name)
         {
-            IntPtr op = Runtime.PyImport_ImportModule(name);
+            IntPtr op = Runtime.PyPyImport_ImportModule(name);
             Py.Throw();
             return new PyObject(op);
         }
@@ -382,7 +382,7 @@ namespace Python.Runtime
         /// </remarks>
         public static PyObject ReloadModule(PyObject module)
         {
-            IntPtr op = Runtime.PyImport_ReloadModule(module.Handle);
+            IntPtr op = Runtime.PyPyImport_ReloadModule(module.Handle);
             Py.Throw();
             return new PyObject(op);
         }
@@ -397,9 +397,9 @@ namespace Python.Runtime
         /// </remarks>
         public static PyObject ModuleFromString(string name, string code)
         {
-            IntPtr c = Runtime.Py_CompileString(code, "none", (IntPtr)257);
+            IntPtr c = Runtime.PyPy_CompileString(code, "none", (IntPtr)257);
             Py.Throw();
-            IntPtr m = Runtime.PyImport_ExecCodeModule(name, c);
+            IntPtr m = Runtime.PyPyImport_ExecCodeModule(name, c);
             Py.Throw();
             return new PyObject(m);
         }
@@ -420,13 +420,13 @@ namespace Python.Runtime
             var borrowedGlobals = true;
             if (globals == null)
             {
-                globals = Runtime.PyEval_GetGlobals();
+                globals = Runtime.PyPyEval_GetGlobals();
                 if (globals == IntPtr.Zero)
                 {
-                    globals = Runtime.PyDict_New();
-                    Runtime.PyDict_SetItemString(
+                    globals = Runtime.PyPyDict_New();
+                    Runtime.PyPyDict_SetItemString(
                         globals.Value, "__builtins__",
-                        Runtime.PyEval_GetBuiltins()
+                        Runtime.PyPyEval_GetBuiltins()
                     );
                     borrowedGlobals = false;
                 }
@@ -435,15 +435,15 @@ namespace Python.Runtime
             var borrowedLocals = true;
             if (locals == null)
             {
-                locals = Runtime.PyDict_New();
+                locals = Runtime.PyPyDict_New();
                 borrowedLocals = false;
             }
 
-            var flag = (IntPtr)257; /* Py_file_input */
+            var flag = (IntPtr)257; /* PyPy_file_input */
 
             try
             {
-                IntPtr result = Runtime.PyRun_String(
+                IntPtr result = Runtime.PyPyRun_String(
                     code, flag, globals.Value, locals.Value
                 );
 
@@ -520,7 +520,7 @@ namespace Python.Runtime
                 {
                     value = Converter.ToPython(kv[i + 1], kv[i + 1]?.GetType());
                 }
-                if (Runtime.PyDict_SetItemString(dict.Handle, (string)kv[i], value) != 0)
+                if (Runtime.PyPyDict_SetItemString(dict.Handle, (string)kv[i], value) != 0)
                 {
                     throw new ArgumentException(string.Format("Cannot add key '{0}' to dictionary.", (string)kv[i]));
                 }
@@ -566,7 +566,7 @@ namespace Python.Runtime
             using (GIL())
             {
                 string[] arr = argv.ToArray();
-                Runtime.PySys_SetArgvEx(arr.Length, arr, 0);
+                Runtime.PyPySys_SetArgvEx(arr.Length, arr, 0);
                 Py.Throw();
             }
         }
@@ -575,7 +575,7 @@ namespace Python.Runtime
         {
             using (GIL())
             {
-                if (Runtime.PyErr_Occurred() != 0)
+                if (Runtime.PyPyErr_Occurred() != 0)
                 {
                     throw new PythonException();
                 }

@@ -51,14 +51,14 @@ namespace Python.Runtime
         {
             var self = (DelegateObject)GetManagedObject(tp);
 
-            if (Runtime.PyTuple_Size(args) != 1)
+            if (Runtime.PyPyTuple_Size(args) != 1)
             {
                 return Exceptions.RaiseTypeError("class takes exactly one argument");
             }
 
-            IntPtr method = Runtime.PyTuple_GetItem(args, 0);
+            IntPtr method = Runtime.PyPyTuple_GetItem(args, 0);
 
-            if (Runtime.PyCallable_Check(method) != 1)
+            if (Runtime.PyPyCallable_Check(method) != 1)
             {
                 return Exceptions.RaiseTypeError("argument must be callable");
             }
@@ -74,7 +74,7 @@ namespace Python.Runtime
         public static IntPtr tp_call(IntPtr ob, IntPtr args, IntPtr kw)
         {
             // TODO: add fast type check!
-            IntPtr pytype = Runtime.PyObject_TYPE(ob);
+            IntPtr pytype = Runtime.PyPyObject_TYPE(ob);
             var self = (DelegateObject)GetManagedObject(pytype);
             var o = GetManagedObject(ob) as CLRObject;
 
@@ -99,7 +99,7 @@ namespace Python.Runtime
 #if PYTHON3 // TODO: Doesn't PY2 implement tp_richcompare too?
         public new static IntPtr tp_richcompare(IntPtr ob, IntPtr other, int op)
         {
-            if (op != Runtime.Py_EQ && op != Runtime.Py_NE)
+            if (op != Runtime.PyPy_EQ && op != Runtime.PyPy_NE)
             {
                 Runtime.XIncref(Runtime.PyNotImplemented);
                 return Runtime.PyNotImplemented;
@@ -109,7 +109,7 @@ namespace Python.Runtime
             IntPtr pyfalse = Runtime.PyFalse;
 
             // swap true and false for NE
-            if (op != Runtime.Py_EQ)
+            if (op != Runtime.PyPy_EQ)
             {
                 pytrue = Runtime.PyFalse;
                 pyfalse = Runtime.PyTrue;

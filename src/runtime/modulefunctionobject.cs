@@ -34,7 +34,7 @@ namespace Python.Runtime
         {
             var self = (ModuleFunctionObject)GetManagedObject(ob);
             string s = $"<CLRModuleFunction '{self.name}'>";
-            return Runtime.PyString_FromStringAndSize(s, s.Length);
+            return Runtime.PyPyString_FromStringAndSize(s, s.Length);
         }
     }
 }

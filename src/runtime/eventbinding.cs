@@ -25,7 +25,7 @@ namespace Python.Runtime
         {
             var self = (EventBinding)GetManagedObject(ob);
 
-            if (Runtime.PyCallable_Check(arg) < 1)
+            if (Runtime.PyPyCallable_Check(arg) < 1)
             {
                 Exceptions.SetError(Exceptions.TypeError, "event handlers must be callable");
                 return IntPtr.Zero;
@@ -48,7 +48,7 @@ namespace Python.Runtime
         {
             var self = (EventBinding)GetManagedObject(ob);
 
-            if (Runtime.PyCallable_Check(arg) < 1)
+            if (Runtime.PyPyCallable_Check(arg) < 1)
             {
                 Exceptions.SetError(Exceptions.TypeError, "invalid event handler");
                 return IntPtr.Zero;
@@ -75,14 +75,14 @@ namespace Python.Runtime
 
             if (self.target != IntPtr.Zero)
             {
-                x = Runtime.PyObject_Hash(self.target).ToInt64();
+                x = Runtime.PyPyObject_Hash(self.target).ToInt64();
                 if (x == -1)
                 {
                     return new IntPtr(-1);
                 }
             }
 
-            y = Runtime.PyObject_Hash(self.e.pyHandle).ToInt64();
+            y = Runtime.PyPyObject_Hash(self.e.pyHandle).ToInt64();
             if (y == -1)
             {
                 return new IntPtr(-1);
@@ -107,7 +107,7 @@ namespace Python.Runtime
             var self = (EventBinding)GetManagedObject(ob);
             string type = self.target == IntPtr.Zero ? "unbound" : "bound";
             string s = string.Format("<{0} event '{1}'>", type, self.e.name);
-            return Runtime.PyString_FromString(s);
+            return Runtime.PyPyString_FromString(s);
         }
 
 

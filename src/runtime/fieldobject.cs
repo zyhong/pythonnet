@@ -137,7 +137,7 @@ namespace Python.Runtime
         {
             var self = (FieldObject)GetManagedObject(ob);
             string s = $"<field '{self.info.Name}'>";
-            return Runtime.PyString_FromStringAndSize(s, s.Length);
+            return Runtime.PyPyString_FromStringAndSize(s, s.Length);
         }
     }
 }

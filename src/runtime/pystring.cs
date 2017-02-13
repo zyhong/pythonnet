@@ -9,7 +9,7 @@ namespace Python.Runtime
     /// for details.
     /// </summary>
     /// <remarks>
-    /// 2011-01-29: ...Then why does the string constructor call PyUnicode_FromUnicode()???
+    /// 2011-01-29: ...Then why does the string constructor call PyPyUnicode_FromUnicode()???
     /// </remarks>
     public class PyString : PySequence
     {
@@ -53,7 +53,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyString(string s)
         {
-            obj = Runtime.PyUnicode_FromUnicode(s, s.Length);
+            obj = Runtime.PyPyUnicode_FromUnicode(s, s.Length);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -69,7 +69,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsStringType(PyObject value)
         {
-            return Runtime.PyString_Check(value.obj);
+            return Runtime.PyPyString_Check(value.obj);
         }
     }
 }

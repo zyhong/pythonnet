@@ -10,7 +10,7 @@ namespace Python.Runtime
     /// for details.
     /// </summary>
     /// <remarks>
-    /// TODO: add all of the PyNumber_XXX methods.
+    /// TODO: add all of the PyPyNumber_XXX methods.
     /// </remarks>
     public class PyNumber : PyObject
     {
@@ -31,7 +31,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsNumberType(PyObject value)
         {
-            return Runtime.PyNumber_Check(value.obj);
+            return Runtime.PyPyNumber_Check(value.obj);
         }
     }
 }

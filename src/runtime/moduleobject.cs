@@ -39,15 +39,15 @@ namespace Python.Runtime
                 docstring += "- " + a.FullName + "\n";
             }
 
-            dict = Runtime.PyDict_New();
-            IntPtr pyname = Runtime.PyString_FromString(moduleName);
-            IntPtr pyfilename = Runtime.PyString_FromString(filename);
-            IntPtr pydocstring = Runtime.PyString_FromString(docstring);
+            dict = Runtime.PyPyDict_New();
+            IntPtr pyname = Runtime.PyPyString_FromString(moduleName);
+            IntPtr pyfilename = Runtime.PyPyString_FromString(filename);
+            IntPtr pydocstring = Runtime.PyPyString_FromString(docstring);
             IntPtr pycls = TypeManager.GetTypeHandle(GetType());
-            Runtime.PyDict_SetItemString(dict, "__name__", pyname);
-            Runtime.PyDict_SetItemString(dict, "__file__", pyfilename);
-            Runtime.PyDict_SetItemString(dict, "__doc__", pydocstring);
-            Runtime.PyDict_SetItemString(dict, "__class__", pycls);
+            Runtime.PyPyDict_SetItemString(dict, "__name__", pyname);
+            Runtime.PyPyDict_SetItemString(dict, "__file__", pyfilename);
+            Runtime.PyPyDict_SetItemString(dict, "__doc__", pydocstring);
+            Runtime.PyPyDict_SetItemString(dict, "__class__", pycls);
             Runtime.XDecref(pyname);
             Runtime.XDecref(pyfilename);
             Runtime.XDecref(pydocstring);
@@ -79,9 +79,9 @@ namespace Python.Runtime
 
             //if (AssemblyManager.IsValidNamespace(name))
             //{
-            //    IntPtr py_mod_name = Runtime.PyString_FromString(name);
-            //    IntPtr modules = Runtime.PyImport_GetModuleDict();
-            //    IntPtr module = Runtime.PyDict_GetItem(modules, py_mod_name);
+            //    IntPtr PyPy_mod_name = Runtime.PyPyString_FromString(name);
+            //    IntPtr modules = Runtime.PyPyImport_GetModuleDict();
+            //    IntPtr module = Runtime.PyPyDict_GetItem(modules, PyPy_mod_name);
             //    if (module != IntPtr.Zero)
             //        return (ManagedType)this;
             //    return null;
@@ -173,7 +173,7 @@ namespace Python.Runtime
         /// </summary>
         private void StoreAttribute(string name, ManagedType ob)
         {
-            Runtime.PyDict_SetItemString(dict, name, ob.pyHandle);
+            Runtime.PyPyDict_SetItemString(dict, name, ob.pyHandle);
             cache[name] = ob;
         }
 
@@ -252,13 +252,13 @@ namespace Python.Runtime
         {
             var self = (ModuleObject)GetManagedObject(ob);
 
-            if (!Runtime.PyString_Check(key))
+            if (!Runtime.PyPyString_Check(key))
             {
                 Exceptions.SetError(Exceptions.TypeError, "string expected");
                 return IntPtr.Zero;
             }
 
-            IntPtr op = Runtime.PyDict_GetItem(self.dict, key);
+            IntPtr op = Runtime.PyPyDict_GetItem(self.dict, key);
             if (op != IntPtr.Zero)
             {
                 Runtime.XIncref(op);
@@ -290,7 +290,7 @@ namespace Python.Runtime
         public static IntPtr tp_repr(IntPtr ob)
         {
             var self = (ModuleObject)GetManagedObject(ob);
-            return Runtime.PyString_FromString($"<module '{self.moduleName}'>");
+            return Runtime.PyPyString_FromString($"<module '{self.moduleName}'>");
         }
     }
 
@@ -315,7 +315,7 @@ namespace Python.Runtime
             // This hackery is required in order to allow a plain Python to
             // import the managed runtime via the CLR bootstrapper module.
             // The standard Python machinery in control at the time of the
-            // import requires the module to pass PyModule_Check. :(
+            // import requires the module to pass PyPyModule_Check. :(
             if (!hacked)
             {
                 IntPtr type = tpHandle;
@@ -337,7 +337,7 @@ namespace Python.Runtime
             if (interactive_preload)
             {
                 interactive_preload = false;
-                if (Runtime.PySys_GetObject("ps1") != IntPtr.Zero)
+                if (Runtime.PyPySys_GetObject("ps1") != IntPtr.Zero)
                 {
                     preload = true;
                 }

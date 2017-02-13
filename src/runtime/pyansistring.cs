@@ -44,7 +44,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyAnsiString(string s)
         {
-            obj = Runtime.PyString_FromStringAndSize(s, s.Length);
+            obj = Runtime.PyPyString_FromStringAndSize(s, s.Length);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -60,7 +60,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsStringType(PyObject value)
         {
-            return Runtime.PyString_Check(value.obj);
+            return Runtime.PyPyString_Check(value.obj);
         }
     }
 }

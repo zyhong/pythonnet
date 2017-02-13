@@ -34,9 +34,9 @@ namespace Python.EmbeddingTest
             const string s = "../../tests";
             string testPath = Path.Combine(TestContext.CurrentContext.TestDirectory, s);
 
-            IntPtr str = Runtime.Runtime.PyString_FromString(testPath);
-            IntPtr path = Runtime.Runtime.PySys_GetObject("path");
-            Runtime.Runtime.PyList_Append(path, str);
+            IntPtr str = Runtime.Runtime.PyPyString_FromString(testPath);
+            IntPtr path = Runtime.Runtime.PyPySys_GetObject("path");
+            Runtime.Runtime.PyPyList_Append(path, str);
         }
 
         [TearDown]

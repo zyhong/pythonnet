@@ -31,7 +31,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyDict()
         {
-            obj = Runtime.PyDict_New();
+            obj = Runtime.PyPyDict_New();
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -66,7 +66,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsDictType(PyObject value)
         {
-            return Runtime.PyDict_Check(value.obj);
+            return Runtime.PyPyDict_Check(value.obj);
         }
 
 
@@ -78,7 +78,7 @@ namespace Python.Runtime
         /// </remarks>
         public bool HasKey(PyObject key)
         {
-            return Runtime.PyMapping_HasKey(obj, key.obj) != 0;
+            return Runtime.PyPyMapping_HasKey(obj, key.obj) != 0;
         }
 
 
@@ -105,7 +105,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Keys()
         {
-            IntPtr items = Runtime.PyDict_Keys(obj);
+            IntPtr items = Runtime.PyPyDict_Keys(obj);
             if (items == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -122,7 +122,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Values()
         {
-            IntPtr items = Runtime.PyDict_Values(obj);
+            IntPtr items = Runtime.PyPyDict_Values(obj);
             if (items == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -139,7 +139,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Items()
         {
-            IntPtr items = Runtime.PyDict_Items(obj);
+            IntPtr items = Runtime.PyPyDict_Items(obj);
             if (items == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -156,7 +156,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyDict Copy()
         {
-            IntPtr op = Runtime.PyDict_Copy(obj);
+            IntPtr op = Runtime.PyPyDict_Copy(obj);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -173,7 +173,7 @@ namespace Python.Runtime
         /// </remarks>
         public void Update(PyObject other)
         {
-            int result = Runtime.PyDict_Update(obj, other.obj);
+            int result = Runtime.PyPyDict_Update(obj, other.obj);
             if (result < 0)
             {
                 throw new PythonException();
@@ -189,7 +189,7 @@ namespace Python.Runtime
         /// </remarks>
         public void Clear()
         {
-            Runtime.PyDict_Clear(obj);
+            Runtime.PyPyDict_Clear(obj);
         }
     }
 }

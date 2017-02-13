@@ -29,28 +29,28 @@ namespace Python.Runtime
         /// </summary>
         public static IntPtr tp_new(IntPtr tp, IntPtr args, IntPtr kw)
         {
-            int len = Runtime.PyTuple_Size(args);
+            int len = Runtime.PyPyTuple_Size(args);
             if (len < 3)
             {
                 return Exceptions.RaiseTypeError("invalid argument list");
             }
 
-            IntPtr name = Runtime.PyTuple_GetItem(args, 0);
-            IntPtr bases = Runtime.PyTuple_GetItem(args, 1);
-            IntPtr dict = Runtime.PyTuple_GetItem(args, 2);
+            IntPtr name = Runtime.PyPyTuple_GetItem(args, 0);
+            IntPtr bases = Runtime.PyPyTuple_GetItem(args, 1);
+            IntPtr dict = Runtime.PyPyTuple_GetItem(args, 2);
 
             // We do not support multiple inheritance, so the bases argument
             // should be a 1-item tuple containing the type we are subtyping.
             // That type must itself have a managed implementation. We check
             // that by making sure its metatype is the CLR metatype.
 
-            if (Runtime.PyTuple_Size(bases) != 1)
+            if (Runtime.PyPyTuple_Size(bases) != 1)
             {
                 return Exceptions.RaiseTypeError("cannot use multiple inheritance with managed classes");
             }
 
-            IntPtr base_type = Runtime.PyTuple_GetItem(bases, 0);
-            IntPtr mt = Runtime.PyObject_TYPE(base_type);
+            IntPtr base_type = Runtime.PyPyTuple_GetItem(bases, 0);
+            IntPtr mt = Runtime.PyPyObject_TYPE(base_type);
 
             if (!(mt == PyCLRMetaType || mt == Runtime.PyTypeType))
             {
@@ -69,7 +69,7 @@ namespace Python.Runtime
                 }
             }
 
-            IntPtr slots = Runtime.PyDict_GetItemString(dict, "__slots__");
+            IntPtr slots = Runtime.PyPyDict_GetItemString(dict, "__slots__");
             if (slots != IntPtr.Zero)
             {
                 return Exceptions.RaiseTypeError("subclasses of managed classes do not support __slots__");
@@ -127,21 +127,21 @@ namespace Python.Runtime
 
         public static IntPtr tp_alloc(IntPtr mt, int n)
         {
-            IntPtr type = Runtime.PyType_GenericAlloc(mt, n);
+            IntPtr type = Runtime.PyPyType_GenericAlloc(mt, n);
             return type;
         }
 
 
         public static void tp_free(IntPtr tp)
         {
-            Runtime.PyObject_GC_Del(tp);
+            Runtime.PyPyObject_GC_Del(tp);
         }
 
 
         /// <summary>
         /// Metatype __call__ implementation. This is needed to ensure correct
         /// initialization (__init__ support), because the tp_call we inherit
-        /// from PyType_Type won't call __init__ for metatypes it doesn't know.
+        /// from PyPyType_Type won't call __init__ for metatypes it doesn't know.
         /// </summary>
         public static IntPtr tp_call(IntPtr tp, IntPtr args, IntPtr kw)
         {
@@ -157,11 +157,11 @@ namespace Python.Runtime
                 return IntPtr.Zero;
             }
 
-            IntPtr py__init__ = Runtime.PyString_FromString("__init__");
-            IntPtr type = Runtime.PyObject_TYPE(obj);
-            IntPtr init = Runtime._PyType_Lookup(type, py__init__);
-            Runtime.XDecref(py__init__);
-            Runtime.PyErr_Clear();
+            IntPtr PyPy__init__ = Runtime.PyPyString_FromString("__init__");
+            IntPtr type = Runtime.PyPyObject_TYPE(obj);
+            IntPtr init = Runtime._PyPyType_Lookup(type, PyPy__init__);
+            Runtime.XDecref(PyPy__init__);
+            Runtime.PyPyErr_Clear();
 
             if (init != IntPtr.Zero)
             {
@@ -172,7 +172,7 @@ namespace Python.Runtime
                     return IntPtr.Zero;
                 }
 
-                IntPtr result = Runtime.PyObject_Call(init, bound, kw);
+                IntPtr result = Runtime.PyPyObject_Call(init, bound, kw);
                 Runtime.XDecref(bound);
 
                 if (result == IntPtr.Zero)
@@ -197,11 +197,11 @@ namespace Python.Runtime
         /// </summary>
         public static int tp_setattro(IntPtr tp, IntPtr name, IntPtr value)
         {
-            IntPtr descr = Runtime._PyType_Lookup(tp, name);
+            IntPtr descr = Runtime._PyPyType_Lookup(tp, name);
 
             if (descr != IntPtr.Zero)
             {
-                IntPtr dt = Runtime.PyObject_TYPE(descr);
+                IntPtr dt = Runtime.PyPyObject_TYPE(descr);
 
                 if (dt == Runtime.PyWrapperDescriptorType
                     || dt == Runtime.PyMethodType
@@ -218,8 +218,8 @@ namespace Python.Runtime
                 }
             }
 
-            int res = Runtime.PyObject_GenericSetAttr(tp, name, value);
-            Runtime.PyType_Modified(tp);
+            int res = Runtime.PyPyObject_GenericSetAttr(tp, name, value);
+            Runtime.PyPyType_Modified(tp);
 
             return res;
         }
@@ -258,7 +258,7 @@ namespace Python.Runtime
             Runtime.XDecref(op);
 
             // Delegate the rest of finalization the Python metatype. Note
-            // that the PyType_Type implementation of tp_dealloc will call
+            // that the PyPyType_Type implementation of tp_dealloc will call
             // tp_free on the type of the type being deallocated - in this
             // case our CLR metatype. That is why we implement tp_free.
 
@@ -294,7 +294,7 @@ namespace Python.Runtime
                     otherType = arg.GetPythonType();
                 }
 
-                if (Runtime.PyObject_TYPE(otherType.Handle) != PyCLRMetaType)
+                if (Runtime.PyPyObject_TYPE(otherType.Handle) != PyCLRMetaType)
                 {
                     Runtime.XIncref(Runtime.PyFalse);
                     return Runtime.PyFalse;

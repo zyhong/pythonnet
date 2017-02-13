@@ -22,7 +22,7 @@ namespace Python.Runtime
         {
             if (ob != IntPtr.Zero)
             {
-                IntPtr tp = Runtime.PyObject_TYPE(ob);
+                IntPtr tp = Runtime.PyPyObject_TYPE(ob);
                 if (tp == Runtime.PyTypeType || tp == Runtime.PyCLRMetaType)
                 {
                     tp = ob;
@@ -57,7 +57,7 @@ namespace Python.Runtime
         {
             if (ob != IntPtr.Zero)
             {
-                IntPtr tp = Runtime.PyObject_TYPE(ob);
+                IntPtr tp = Runtime.PyPyObject_TYPE(ob);
                 if (tp == Runtime.PyTypeType || tp == Runtime.PyCLRMetaType)
                 {
                     tp = ob;

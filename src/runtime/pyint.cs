@@ -50,7 +50,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyInt(int value)
         {
-            obj = Runtime.PyInt_FromInt32(value);
+            obj = Runtime.PyPyInt_FromInt32(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -67,7 +67,7 @@ namespace Python.Runtime
         [CLSCompliant(false)]
         public PyInt(uint value) : base(IntPtr.Zero)
         {
-            obj = Runtime.PyInt_FromInt64(value);
+            obj = Runtime.PyPyInt_FromInt64(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -83,7 +83,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyInt(long value) : base(IntPtr.Zero)
         {
-            obj = Runtime.PyInt_FromInt64(value);
+            obj = Runtime.PyPyInt_FromInt64(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -100,7 +100,7 @@ namespace Python.Runtime
         [CLSCompliant(false)]
         public PyInt(ulong value) : base(IntPtr.Zero)
         {
-            obj = Runtime.PyInt_FromInt64((long)value);
+            obj = Runtime.PyPyInt_FromInt64((long)value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -162,7 +162,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyInt(string value)
         {
-            obj = Runtime.PyInt_FromString(value, IntPtr.Zero, 0);
+            obj = Runtime.PyPyInt_FromString(value, IntPtr.Zero, 0);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -178,7 +178,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsIntType(PyObject value)
         {
-            return Runtime.PyInt_Check(value.obj);
+            return Runtime.PyPyInt_Check(value.obj);
         }
 
 
@@ -192,7 +192,7 @@ namespace Python.Runtime
         /// </remarks>
         public static PyInt AsInt(PyObject value)
         {
-            IntPtr op = Runtime.PyNumber_Int(value.obj);
+            IntPtr op = Runtime.PyPyNumber_Int(value.obj);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -221,7 +221,7 @@ namespace Python.Runtime
         /// </remarks>
         public int ToInt32()
         {
-            return Runtime.PyInt_AsLong(obj);
+            return Runtime.PyPyInt_AsLong(obj);
         }
 
 

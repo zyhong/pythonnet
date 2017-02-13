@@ -50,7 +50,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyLong(int value)
         {
-            obj = Runtime.PyLong_FromLong(value);
+            obj = Runtime.PyPyLong_FromLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -67,7 +67,7 @@ namespace Python.Runtime
         [CLSCompliant(false)]
         public PyLong(uint value)
         {
-            obj = Runtime.PyLong_FromLong(value);
+            obj = Runtime.PyPyLong_FromLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -83,7 +83,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyLong(long value)
         {
-            obj = Runtime.PyLong_FromLongLong(value);
+            obj = Runtime.PyPyLong_FromLongLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -100,7 +100,7 @@ namespace Python.Runtime
         [CLSCompliant(false)]
         public PyLong(ulong value)
         {
-            obj = Runtime.PyLong_FromUnsignedLongLong(value);
+            obj = Runtime.PyPyLong_FromUnsignedLongLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -116,7 +116,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyLong(short value)
         {
-            obj = Runtime.PyLong_FromLong(value);
+            obj = Runtime.PyPyLong_FromLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -133,7 +133,7 @@ namespace Python.Runtime
         [CLSCompliant(false)]
         public PyLong(ushort value)
         {
-            obj = Runtime.PyLong_FromLong(value);
+            obj = Runtime.PyPyLong_FromLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -149,7 +149,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyLong(byte value)
         {
-            obj = Runtime.PyLong_FromLong(value);
+            obj = Runtime.PyPyLong_FromLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -166,7 +166,7 @@ namespace Python.Runtime
         [CLSCompliant(false)]
         public PyLong(sbyte value)
         {
-            obj = Runtime.PyLong_FromLong(value);
+            obj = Runtime.PyPyLong_FromLong(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -182,7 +182,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyLong(double value)
         {
-            obj = Runtime.PyLong_FromDouble(value);
+            obj = Runtime.PyPyLong_FromDouble(value);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -198,7 +198,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyLong(string value)
         {
-            obj = Runtime.PyLong_FromString(value, IntPtr.Zero, 0);
+            obj = Runtime.PyPyLong_FromString(value, IntPtr.Zero, 0);
             if (obj == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -214,7 +214,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsLongType(PyObject value)
         {
-            return Runtime.PyLong_Check(value.obj);
+            return Runtime.PyPyLong_Check(value.obj);
         }
 
 
@@ -228,7 +228,7 @@ namespace Python.Runtime
         /// </remarks>
         public static PyLong AsLong(PyObject value)
         {
-            IntPtr op = Runtime.PyNumber_Long(value.obj);
+            IntPtr op = Runtime.PyPyNumber_Long(value.obj);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -268,7 +268,7 @@ namespace Python.Runtime
         /// </remarks>
         public long ToInt64()
         {
-            return Runtime.PyLong_AsLongLong(obj);
+            return Runtime.PyPyLong_AsLongLong(obj);
         }
     }
 }

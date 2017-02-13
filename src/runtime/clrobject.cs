@@ -9,7 +9,7 @@ namespace Python.Runtime
 
         internal CLRObject(object ob, IntPtr tp)
         {
-            IntPtr py = Runtime.PyType_GenericAlloc(tp, 0);
+            IntPtr py = Runtime.PyPyType_GenericAlloc(tp, 0);
 
             var flags = (int)Marshal.ReadIntPtr(tp, TypeOffset.tp_flags);
             if ((flags & TypeFlags.Subclass) != 0)
@@ -17,7 +17,7 @@ namespace Python.Runtime
                 IntPtr dict = Marshal.ReadIntPtr(py, ObjectOffset.DictOffset(tp));
                 if (dict == IntPtr.Zero)
                 {
-                    dict = Runtime.PyDict_New();
+                    dict = Runtime.PyPyDict_New();
                     Marshal.WriteIntPtr(py, ObjectOffset.DictOffset(tp), dict);
                 }
             }

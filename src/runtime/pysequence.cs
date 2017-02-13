@@ -29,7 +29,7 @@ namespace Python.Runtime
         /// </remarks>
         public static bool IsSequenceType(PyObject value)
         {
-            return Runtime.PySequence_Check(value.obj);
+            return Runtime.PyPySequence_Check(value.obj);
         }
 
 
@@ -41,7 +41,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject GetSlice(int i1, int i2)
         {
-            IntPtr op = Runtime.PySequence_GetSlice(obj, i1, i2);
+            IntPtr op = Runtime.PyPySequence_GetSlice(obj, i1, i2);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -58,7 +58,7 @@ namespace Python.Runtime
         /// </remarks>
         public void SetSlice(int i1, int i2, PyObject v)
         {
-            int r = Runtime.PySequence_SetSlice(obj, i1, i2, v.obj);
+            int r = Runtime.PyPySequence_SetSlice(obj, i1, i2, v.obj);
             if (r < 0)
             {
                 throw new PythonException();
@@ -74,7 +74,7 @@ namespace Python.Runtime
         /// </remarks>
         public void DelSlice(int i1, int i2)
         {
-            int r = Runtime.PySequence_DelSlice(obj, i1, i2);
+            int r = Runtime.PyPySequence_DelSlice(obj, i1, i2);
             if (r < 0)
             {
                 throw new PythonException();
@@ -91,10 +91,10 @@ namespace Python.Runtime
         /// </remarks>
         public int Index(PyObject item)
         {
-            int r = Runtime.PySequence_Index(obj, item.obj);
+            int r = Runtime.PyPySequence_Index(obj, item.obj);
             if (r < 0)
             {
-                Runtime.PyErr_Clear();
+                Runtime.PyPyErr_Clear();
                 return -1;
             }
             return r;
@@ -110,7 +110,7 @@ namespace Python.Runtime
         /// </remarks>
         public bool Contains(PyObject item)
         {
-            int r = Runtime.PySequence_Contains(obj, item.obj);
+            int r = Runtime.PyPySequence_Contains(obj, item.obj);
             if (r < 0)
             {
                 throw new PythonException();
@@ -128,7 +128,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Concat(PyObject other)
         {
-            IntPtr op = Runtime.PySequence_Concat(obj, other.obj);
+            IntPtr op = Runtime.PyPySequence_Concat(obj, other.obj);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();
@@ -146,7 +146,7 @@ namespace Python.Runtime
         /// </remarks>
         public PyObject Repeat(int count)
         {
-            IntPtr op = Runtime.PySequence_Repeat(obj, count);
+            IntPtr op = Runtime.PyPySequence_Repeat(obj, count);
             if (op == IntPtr.Zero)
             {
                 throw new PythonException();

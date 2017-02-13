@@ -131,15 +131,15 @@ namespace Python.Runtime
         /// </summary>
         internal static void UpdatePath()
         {
-            IntPtr list = Runtime.PySys_GetObject("path");
-            int count = Runtime.PyList_Size(list);
+            IntPtr list = Runtime.PyPySys_GetObject("path");
+            int count = Runtime.PyPyList_Size(list);
             if (count != pypath.Count)
             {
                 pypath.Clear();
                 probed.Clear();
                 for (var i = 0; i < count; i++)
                 {
-                    IntPtr item = Runtime.PyList_GetItem(list, i);
+                    IntPtr item = Runtime.PyPyList_GetItem(list, i);
                     string path = Runtime.GetManagedString(item);
                     if (path != null)
                     {

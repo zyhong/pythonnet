@@ -69,13 +69,13 @@ namespace Python.Runtime
             CLRObject co2;
             switch (op)
             {
-                case Runtime.Py_EQ:
-                case Runtime.Py_NE:
+                case Runtime.PyPy_EQ:
+                case Runtime.PyPy_NE:
                     IntPtr pytrue = Runtime.PyTrue;
                     IntPtr pyfalse = Runtime.PyFalse;
 
                     // swap true and false for NE
-                    if (op != Runtime.Py_EQ)
+                    if (op != Runtime.PyPy_EQ)
                     {
                         pytrue = Runtime.PyFalse;
                         pyfalse = Runtime.PyTrue;
@@ -106,10 +106,10 @@ namespace Python.Runtime
 
                     Runtime.XIncref(pyfalse);
                     return pyfalse;
-                case Runtime.Py_LT:
-                case Runtime.Py_LE:
-                case Runtime.Py_GT:
-                case Runtime.Py_GE:
+                case Runtime.PyPy_LT:
+                case Runtime.PyPy_LE:
+                case Runtime.PyPy_GT:
+                case Runtime.PyPy_GE:
                     co1 = GetManagedObject(ob) as CLRObject;
                     co2 = GetManagedObject(other) as CLRObject;
                     if (co1 == null || co2 == null)
@@ -129,7 +129,7 @@ namespace Python.Runtime
                         IntPtr pyCmp;
                         if (cmp < 0)
                         {
-                            if (op == Runtime.Py_LT || op == Runtime.Py_LE)
+                            if (op == Runtime.PyPy_LT || op == Runtime.PyPy_LE)
                             {
                                 pyCmp = Runtime.PyTrue;
                             }
@@ -140,7 +140,7 @@ namespace Python.Runtime
                         }
                         else if (cmp == 0)
                         {
-                            if (op == Runtime.Py_LE || op == Runtime.Py_GE)
+                            if (op == Runtime.PyPy_LE || op == Runtime.PyPy_GE)
                             {
                                 pyCmp = Runtime.PyTrue;
                             }
@@ -151,7 +151,7 @@ namespace Python.Runtime
                         }
                         else
                         {
-                            if (op == Runtime.Py_GE || op == Runtime.Py_GT)
+                            if (op == Runtime.PyPy_GE || op == Runtime.PyPy_GT)
                             {
                                 pyCmp = Runtime.PyTrue;
                             }
@@ -234,7 +234,7 @@ namespace Python.Runtime
             }
             try
             {
-                return Runtime.PyString_FromString(co.inst.ToString());
+                return Runtime.PyPyString_FromString(co.inst.ToString());
             }
             catch (Exception e)
             {
@@ -277,8 +277,8 @@ namespace Python.Runtime
             {
                 Runtime.XDecref(dict);
             }
-            Runtime.PyObject_GC_UnTrack(self.pyHandle);
-            Runtime.PyObject_GC_Del(self.pyHandle);
+            Runtime.PyPyObject_GC_UnTrack(self.pyHandle);
+            Runtime.PyPyObject_GC_Del(self.pyHandle);
             Runtime.XDecref(self.tpHandle);
             self.gcHandle.Free();
         }

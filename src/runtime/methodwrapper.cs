@@ -24,12 +24,12 @@ namespace Python.Runtime
 
             mdef = Runtime.PyMem_Malloc(4 * IntPtr.Size);
             TypeManager.WriteMethodDef(mdef, name, fp, 0x0003);
-            ptr = Runtime.PyCFunction_NewEx(mdef, IntPtr.Zero, IntPtr.Zero);
+            ptr = Runtime.PyPyCFunction_NewEx(mdef, IntPtr.Zero, IntPtr.Zero);
         }
 
         public IntPtr Call(IntPtr args, IntPtr kw)
         {
-            return Runtime.PyCFunction_Call(ptr, args, kw);
+            return Runtime.PyPyCFunction_Call(ptr, args, kw);
         }
     }
 }

@@ -31,8 +31,9 @@ namespace Python.Runtime
             return ob_size;
         }
 
-        // Auto-generated from PyHeapTypeObject in Python.h
+        // Auto-generated from PyHeapTypeObject in Object.h
         public static int ob_refcnt = 0;
+        public static int ob_pypy_link = 0;
         public static int ob_type = 0;
         public static int ob_size = 0;
         public static int tp_name = 0;

@@ -24,7 +24,7 @@ namespace Python.Runtime
             Runtime.XIncref(targetType);
             if (targetType == IntPtr.Zero)
             {
-                targetType = Runtime.PyObject_Type(target);
+                targetType = Runtime.PyPyObject_Type(target);
             }
             this.targetType = targetType;
 
@@ -69,7 +69,7 @@ namespace Python.Runtime
         {
             var self = (MethodBinding)GetManagedObject(ob);
 
-            if (!Runtime.PyString_Check(key))
+            if (!Runtime.PyPyString_Check(key))
             {
                 Exceptions.SetError(Exceptions.TypeError, "string expected");
                 return IntPtr.Zero;
@@ -91,7 +91,7 @@ namespace Python.Runtime
                 return om.pyHandle;
             }
 
-            return Runtime.PyObject_GenericGetAttr(ob, key);
+            return Runtime.PyPyObject_GenericGetAttr(ob, key);
         }
 
 
@@ -108,7 +108,7 @@ namespace Python.Runtime
             {
                 if (self.info.IsGenericMethod)
                 {
-                    int len = Runtime.PyTuple_Size(args); //FIXME: Never used
+                    int len = Runtime.PyPyTuple_Size(args); //FIXME: Never used
                     Type[] sigTp = Runtime.PythonArgsToTypeArray(args, true);
                     if (sigTp != null)
                     {
@@ -133,17 +133,17 @@ namespace Python.Runtime
 
                 if (target == IntPtr.Zero && !self.m.IsStatic())
                 {
-                    int len = Runtime.PyTuple_Size(args);
+                    int len = Runtime.PyPyTuple_Size(args);
                     if (len < 1)
                     {
                         Exceptions.SetError(Exceptions.TypeError, "not enough arguments");
                         return IntPtr.Zero;
                     }
-                    target = Runtime.PyTuple_GetItem(args, 0);
+                    target = Runtime.PyPyTuple_GetItem(args, 0);
                     Runtime.XIncref(target);
                     disposeList.Add(target);
 
-                    args = Runtime.PyTuple_GetSlice(args, 1, len);
+                    args = Runtime.PyPyTuple_GetSlice(args, 1, len);
                     disposeList.Add(args);
                 }
 
@@ -151,7 +151,7 @@ namespace Python.Runtime
                 // (eg if calling the base class method) then call the original base class method instead
                 // of the target method.
                 IntPtr superType = IntPtr.Zero;
-                if (Runtime.PyObject_TYPE(target) != self.targetType)
+                if (Runtime.PyPyObject_TYPE(target) != self.targetType)
                 {
                     var inst = GetManagedObject(target) as CLRObject;
                     if (inst?.inst is IPythonDerivedType)
@@ -160,7 +160,7 @@ namespace Python.Runtime
                         if (baseType != null)
                         {
                             string baseMethodName = "_" + baseType.type.Name + "__" + self.m.name;
-                            IntPtr baseMethod = Runtime.PyObject_GetAttrString(target, baseMethodName);
+                            IntPtr baseMethod = Runtime.PyPyObject_GetAttrString(target, baseMethodName);
                             if (baseMethod != IntPtr.Zero)
                             {
                                 var baseSelf = GetManagedObject(baseMethod) as MethodBinding;
@@ -172,7 +172,7 @@ namespace Python.Runtime
                             }
                             else
                             {
-                                Runtime.PyErr_Clear();
+                                Runtime.PyPyErr_Clear();
                             }
                         }
                     }
@@ -201,14 +201,14 @@ namespace Python.Runtime
 
             if (self.target != IntPtr.Zero)
             {
-                x = Runtime.PyObject_Hash(self.target).ToInt64();
+                x = Runtime.PyPyObject_Hash(self.target).ToInt64();
                 if (x == -1)
                 {
                     return new IntPtr(-1);
                 }
             }
 
-            y = Runtime.PyObject_Hash(self.m.pyHandle).ToInt64();
+            y = Runtime.PyPyObject_Hash(self.m.pyHandle).ToInt64();
             if (y == -1)
             {
                 return new IntPtr(-1);
@@ -232,7 +232,7 @@ namespace Python.Runtime
             var self = (MethodBinding)GetManagedObject(ob);
             string type = self.target == IntPtr.Zero ? "unbound" : "bound";
             string s = string.Format("<{0} method '{1}'>", type, self.m.name);
-            return Runtime.PyString_FromStringAndSize(s, s.Length);
+            return Runtime.PyPyString_FromStringAndSize(s, s.Length);
         }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace Python.Runtime
             string[] cmd = Environment.GetCommandLineArgs();
             PythonEngine.Initialize();
 
-            int i = Runtime.Py_Main(cmd.Length, cmd);
+            int i = Runtime.PyPy_Main(cmd.Length, cmd);
             PythonEngine.Shutdown();
 
             return i;
