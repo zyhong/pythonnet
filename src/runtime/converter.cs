@@ -1,11 +1,8 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.ComponentModel;
 
 namespace Python.Runtime
 {
@@ -31,6 +28,9 @@ namespace Python.Runtime
         private static Type flagsType;
         private static Type boolType;
         private static Type typeType;
+        private static IntPtr dateTimeCtor;
+        private static IntPtr timeSpanCtor;
+        private static IntPtr tzInfoCtor;
 
         static Converter()
         {
@@ -46,6 +46,31 @@ namespace Python.Runtime
             flagsType = typeof(FlagsAttribute);
             boolType = typeof(Boolean);
             typeType = typeof(Type);
+
+            IntPtr dateTimeMod = Runtime.PyImport_ImportModule("datetime");
+            if (dateTimeMod == null) throw new PythonException();
+
+            dateTimeCtor = Runtime.PyObject_GetAttrString(dateTimeMod, "datetime");
+            if (dateTimeCtor == null) throw new PythonException();
+
+            timeSpanCtor = Runtime.PyObject_GetAttrString(dateTimeMod, "timedelta");
+            if (timeSpanCtor == null) throw new PythonException();
+
+            IntPtr tzInfoMod = PythonEngine.ModuleFromString("custom_tzinfo", @"
+from datetime import timedelta, tzinfo
+class GMT(tzinfo):
+    def __init__(self, hours, minutes):
+        self.hours = hours
+        self.minutes = minutes
+    def utcoffset(self, dt):
+        return timedelta(hours=self.hours, minutes=self.minutes)
+    def tzname(self, dt):
+        return f'GMT {self.hours:00}:{self.minutes:00}'
+    def dst (self, dt):
+        return timedelta(0)").Handle;
+
+            tzInfoCtor = Runtime.PyObject_GetAttrString(tzInfoMod, "GMT");
+            if (tzInfoCtor == null) throw new PythonException();
         }
 
 
@@ -71,6 +96,9 @@ namespace Python.Runtime
 
             if (op == Runtime.PyBoolType)
                 return boolType;
+
+            if (op == Runtime.PyDecimalType)
+                return decimalType;
 
             return null;
         }
@@ -100,6 +128,9 @@ namespace Python.Runtime
 
             if (op == boolType)
                 return Runtime.PyBoolType;
+
+            if (op == decimalType)
+                return Runtime.PyDecimalType;
 
             return IntPtr.Zero;
         }
@@ -135,8 +166,8 @@ namespace Python.Runtime
                 return result;
             }
 
-			if (value is IList && !(value is INotifyPropertyChanged) && value.GetType().IsGenericType)
-			{
+            if (value is IList && value.GetType().IsGenericType)
+            {
                 using (var resultlist = new PyList())
                 {
                     foreach (object o in (IEnumerable)value)
@@ -156,15 +187,15 @@ namespace Python.Runtime
             var pyderived = value as IPythonDerivedType;
             if (null != pyderived)
             {
-                #if NETSTANDARD
+#if NETSTANDARD
                 return ClassDerivedObject.ToPython(pyderived);
-                #else
+#else
                 // if object is remote don't do this
                 if (!System.Runtime.Remoting.RemotingServices.IsTransparentProxy(pyderived))
                 {
                     return ClassDerivedObject.ToPython(pyderived);
                 }
-                #endif
+#endif
             }
 
             // hmm - from Python, we almost never care what the declared
@@ -178,6 +209,17 @@ namespace Python.Runtime
             switch (tc)
             {
                 case TypeCode.Object:
+                    if (value is TimeSpan)
+                    {
+                        var timespan = (TimeSpan)value;
+
+                        IntPtr timeSpanArgs = Runtime.PyTuple_New(1);
+                        Runtime.PyTuple_SetItem(timeSpanArgs, 0, Runtime.PyFloat_FromDouble(timespan.TotalDays));
+                        var returnTimeSpan = Runtime.PyObject_CallObject(timeSpanCtor, timeSpanArgs);
+                        // clean up
+                        Runtime.XDecref(timeSpanArgs);
+                        return returnTimeSpan;
+                    }
                     return CLRObject.GetInstHandle(value, type);
 
                 case TypeCode.String:
@@ -230,6 +272,40 @@ namespace Python.Runtime
                 case TypeCode.UInt64:
                     return Runtime.PyLong_FromUnsignedLongLong((ulong)value);
 
+                case TypeCode.Decimal:
+                    // C# decimal to python decimal has a big impact on performance
+                    // so we will use C# double and python float
+                    return Runtime.PyFloat_FromDouble(decimal.ToDouble((decimal)value));
+
+                case TypeCode.DateTime:
+                    var datetime = (DateTime)value;
+
+                    var size = datetime.Kind == DateTimeKind.Unspecified ? 7 : 8;
+
+                    IntPtr dateTimeArgs = Runtime.PyTuple_New(size);
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 0, Runtime.PyInt_FromInt32(datetime.Year));
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 1, Runtime.PyInt_FromInt32(datetime.Month));
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 2, Runtime.PyInt_FromInt32(datetime.Day));
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 3, Runtime.PyInt_FromInt32(datetime.Hour));
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 4, Runtime.PyInt_FromInt32(datetime.Minute));
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 5, Runtime.PyInt_FromInt32(datetime.Second));
+
+                    // datetime.datetime 6th argument represents micro seconds
+                    var totalSeconds = datetime.TimeOfDay.TotalSeconds;
+                    var microSeconds = Convert.ToInt32((totalSeconds - Math.Truncate(totalSeconds)) * 1000000);
+                    if (microSeconds == 1000000) microSeconds = 999999;
+                    Runtime.PyTuple_SetItem(dateTimeArgs, 6, Runtime.PyInt_FromInt32(microSeconds));
+
+                    if (size == 8)
+                    {
+                        Runtime.PyTuple_SetItem(dateTimeArgs, 7, TzInfo(datetime.Kind));
+                    }
+
+                    var returnDateTime = Runtime.PyObject_CallObject(dateTimeCtor, dateTimeArgs);
+                    // clean up
+                    Runtime.XDecref(dateTimeArgs);
+                    return returnDateTime;
+
                 default:
                     if (value is IEnumerable)
                     {
@@ -249,6 +325,18 @@ namespace Python.Runtime
                     result = CLRObject.GetInstHandle(value, type);
                     return result;
             }
+        }
+
+        private static IntPtr TzInfo(DateTimeKind kind)
+        {
+            if (kind == DateTimeKind.Unspecified) return Runtime.PyNone;
+            var offset = kind == DateTimeKind.Local ? DateTimeOffset.Now.Offset : TimeSpan.Zero;
+            IntPtr tzInfoArgs = Runtime.PyTuple_New(2);
+            Runtime.PyTuple_SetItem(tzInfoArgs, 0, Runtime.PyFloat_FromDouble(offset.Hours));
+            Runtime.PyTuple_SetItem(tzInfoArgs, 1, Runtime.PyFloat_FromDouble(offset.Minutes));
+            var returnValue = Runtime.PyObject_CallObject(tzInfoCtor, tzInfoArgs);
+            Runtime.XDecref(tzInfoArgs);
+            return returnValue;
         }
 
 
@@ -329,7 +417,7 @@ namespace Python.Runtime
 
             if (obType.IsGenericType && obType.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                if( value == Runtime.PyNone )
+                if (value == Runtime.PyNone)
                 {
                     result = null;
                     return true;
@@ -437,6 +525,26 @@ namespace Python.Runtime
                 return false;
             }
 
+            var underlyingType = Nullable.GetUnderlyingType(obType);
+            if (underlyingType != null)
+            {
+                return ToManagedValue(value, underlyingType, out result, setError);
+            }
+
+            var opImplicit = obType.GetMethod("op_Implicit", new[] { obType });
+            if (opImplicit != null)
+            {
+                if (ToManagedValue(value, opImplicit.ReturnType, out result, setError))
+                {
+                    opImplicit = obType.GetMethod("op_Implicit", new[] { result.GetType() });
+                    if (opImplicit != null)
+                    {
+                        result = opImplicit.Invoke(null, new[] { result });
+                    }
+                    return opImplicit != null;
+                }
+            }
+
             return ToPrimitive(value, obType, out result, setError);
         }
 
@@ -453,6 +561,32 @@ namespace Python.Runtime
 
             switch (tc)
             {
+                case TypeCode.Object:
+                    if (obType == typeof(TimeSpan))
+                    {
+                        op = Runtime.PyObject_Str(value);
+                        TimeSpan ts;
+                        var arr = Runtime.GetManagedString(op).Split(',');
+                        string sts = arr.Length == 1 ? arr[0] : arr[1];
+                        if (!TimeSpan.TryParse(sts, out ts))
+                        {
+                            goto type_error;
+                        }
+                        Runtime.XDecref(op);
+
+                        int days = 0;
+                        if (arr.Length > 1)
+                        {
+                            if (!int.TryParse(arr[0].Split(' ')[0].Trim(), out days))
+                            {
+                                goto type_error;
+                            }
+                        }
+                        result = ts.Add(TimeSpan.FromDays(days));
+                        return true;
+                    }
+                    break;
+
                 case TypeCode.String:
                     string st = Runtime.GetManagedString(value);
                     if (st == null)
@@ -802,10 +936,34 @@ namespace Python.Runtime
                     Runtime.XDecref(op);
                     result = d;
                     return true;
+
+                case TypeCode.Decimal:
+                    op = Runtime.PyObject_Str(value);
+                    decimal m;
+                    string sm = Runtime.GetManagedString(op);
+                    if (!Decimal.TryParse(sm, NumberStyles.Number | NumberStyles.AllowExponent, nfi, out m))
+                    {
+                        goto type_error;
+                    }
+                    Runtime.XDecref(op);
+                    result = m;
+                    return true;
+
+                case TypeCode.DateTime:
+                    op = Runtime.PyObject_Str(value);
+                    DateTime dt;
+                    string sdt = Runtime.GetManagedString(op);
+                    if (!DateTime.TryParse(sdt, out dt))
+                    {
+                        goto type_error;
+                    }
+                    Runtime.XDecref(op);
+                    result = sdt.EndsWith("+00:00") ? dt.ToUniversalTime() : dt;
+                    return true;
             }
 
 
-            type_error:
+        type_error:
 
             if (setError)
             {
@@ -815,7 +973,7 @@ namespace Python.Runtime
 
             return false;
 
-            overflow:
+        overflow:
 
             if (setError)
             {
@@ -843,10 +1001,10 @@ namespace Python.Runtime
         private static bool ToArray(IntPtr value, Type obType, out object result, bool setError)
         {
             Type elementType = obType.GetElementType();
-            var size = Runtime.PySequence_Size(value);
+            long size = Runtime.PySequence_Size(value);
             result = null;
 
-            if (size < 0)
+            if (size < 0 || elementType.IsGenericType)
             {
                 if (setError)
                 {

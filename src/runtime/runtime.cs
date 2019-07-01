@@ -268,6 +268,14 @@ namespace Python.Runtime
             PyFloatType = PyObject_Type(op);
             XDecref(op);
 
+            IntPtr decimalMod = PyImport_ImportModule("decimal");
+            IntPtr decimalCtor = PyObject_GetAttrString(decimalMod, "Decimal");
+            op = PyObject_CallObject(decimalCtor, IntPtr.Zero);
+            PyDecimalType = PyObject_Type(op);
+            XDecref(op);
+            XDecref(decimalMod);
+            XDecref(decimalCtor);
+
 #if PYTHON3
             PyClassType = IntPtr.Zero;
             PyInstanceType = IntPtr.Zero;
@@ -413,6 +421,7 @@ namespace Python.Runtime
         internal static IntPtr PyBoolType;
         internal static IntPtr PyNoneType;
         internal static IntPtr PyTypeType;
+        internal static IntPtr PyDecimalType;
 
 #if PYTHON3
         internal static IntPtr PyBytesType;
@@ -928,7 +937,7 @@ namespace Python.Runtime
 
         internal static long PyObject_Size(IntPtr pointer)
         {
-            return (long) _PyObject_Size(pointer);
+            return (long)_PyObject_Size(pointer);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PyObject_Size")]
@@ -1212,7 +1221,7 @@ namespace Python.Runtime
 
         internal static long PySequence_Size(IntPtr pointer)
         {
-            return (long) _PySequence_Size(pointer);
+            return (long)_PySequence_Size(pointer);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PySequence_Size")]
@@ -1237,7 +1246,7 @@ namespace Python.Runtime
 
         internal static long PySequence_Count(IntPtr pointer, IntPtr value)
         {
-            return (long) _PySequence_Count(pointer, value);
+            return (long)_PySequence_Count(pointer, value);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PySequence_Count")]
@@ -1280,7 +1289,7 @@ namespace Python.Runtime
 
         internal static long PyBytes_Size(IntPtr op)
         {
-            return (long) _PyBytes_Size(op);
+            return (long)_PyBytes_Size(op);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PyBytes_Size")]
@@ -1507,7 +1516,7 @@ namespace Python.Runtime
 
         internal static long PyDict_Size(IntPtr pointer)
         {
-            return (long) _PyDict_Size(pointer);
+            return (long)_PyDict_Size(pointer);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PyDict_Size")]
@@ -1585,7 +1594,7 @@ namespace Python.Runtime
 
         internal static long PyList_Size(IntPtr pointer)
         {
-            return (long) _PyList_Size(pointer);
+            return (long)_PyList_Size(pointer);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PyList_Size")]
@@ -1634,7 +1643,7 @@ namespace Python.Runtime
 
         internal static long PyTuple_Size(IntPtr pointer)
         {
-            return (long) _PyTuple_Size(pointer);
+            return (long)_PyTuple_Size(pointer);
         }
 
         [DllImport(_PythonDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PyTuple_Size")]
